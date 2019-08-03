@@ -1,0 +1,19 @@
+{
+    "name": "component-to-vue",
+    "version": "1.0.0",
+    "main": "main.js",
+    "scripts": {
+        "build": "webpack --mode development",
+        "dev": "nodemon --watch ./src --ext js,vue,css --watch webpack.config.js --exec npm run build"
+    },
+    "dependencies": {
+        "css-loader": "^3.1.0",
+        "nodemon": "^1.19.1",
+        "style-loader": "^0.23.1",
+        "vue": "^2.6.10",
+        "vue-loader": "^15.7.1",
+        "vue-template-compiler": "^2.6.10",
+        "webpack": "^4.39.1",
+        "webpack-cli": "^3.3.6"
+    }
+}

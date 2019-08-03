@@ -1,0 +1,37 @@
+.h-hide {
+    display: none !important;
+}
+
+form {
+    position: relative;
+    width: 1024px;
+}
+
+.notification {
+    position: absolute;
+    top: 7px;
+    right: 8px;
+    max-width: 700px;
+    text-align: right;
+}
+
+.menu {
+    display: flex;
+}
+
+.variables {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.variables textarea {
+    height: 320px;
+}
+
+.variables__left {
+    flex: 1 0 50%;
+}
+
+.variables__right {
+    flex: 1 0 50%;
+}
