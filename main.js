@@ -94,7 +94,7 @@ module.exports =
 /*! exports provided: summary, languages, author, name, host, description, helpUrl, id, icons, uiEntryPoints, version, default */
 /***/ (function(module) {
 
-module.exports = JSON.parse("{\"summary\":\"Export Adobe XD component to Vue.js\",\"languages\":[\"en\"],\"author\":\"Igor Yakovlev\",\"name\":\"Component to Vue\",\"host\":{\"app\":\"XD\",\"minVersion\":\"13.0\"},\"description\":\"Export Adobe XD component to Vue.js\",\"helpUrl\":\"\",\"id\":\"6f933951\",\"icons\":[{\"path\":\"images/icon@1x.png\",\"width\":24,\"height\":24},{\"path\":\"images/icon@2x.png\",\"width\":48,\"height\":48},{\"path\":\"images/icon@3x.png\",\"width\":96,\"height\":96},{\"path\":\"images/icon@4x.png\",\"width\":144,\"height\":144},{\"path\":\"images/icon@5x.png\",\"width\":192,\"height\":192}],\"uiEntryPoints\":[{\"label\":\"Export to Vue\",\"type\":\"menu\",\"commandId\":\"exportToVue\"}],\"version\":\"1.0.0\"}");
+module.exports = JSON.parse("{\"summary\":\"Export Adobe XD component to Vue.js\",\"languages\":[\"en\"],\"author\":\"Igor Yakovlev\",\"name\":\"Component to Vue\",\"host\":{\"app\":\"XD\",\"minVersion\":\"13.0\"},\"description\":\"Export Adobe XD component to Vue.js\",\"helpUrl\":\"https://github.com/LeXX/xd-component-to-vue\",\"id\":\"6f933951\",\"icons\":[{\"path\":\"images/icon@1x.png\",\"width\":24,\"height\":24},{\"path\":\"images/icon@2x.png\",\"width\":48,\"height\":48},{\"path\":\"images/icon@3x.png\",\"width\":96,\"height\":96},{\"path\":\"images/icon@4x.png\",\"width\":144,\"height\":144},{\"path\":\"images/icon@5x.png\",\"width\":192,\"height\":192}],\"uiEntryPoints\":[{\"label\":\"Export to Vue\",\"type\":\"menu\",\"commandId\":\"exportToVue\"}],\"version\":\"1.0.0\"}");
 
 /***/ }),
 
@@ -1341,9 +1341,7 @@ module.exports = {
         },
 
         copySCSSVariablesToClipboard() {
-            application.editDocument(selection => {
-                clipboard.copyText(this.scssVariables);
-            });
+            clipboard.copyText(this.scssVariables);
 
             this.showNotification({
                 text: 'Colors for SCSS is now available on the clipboard',
