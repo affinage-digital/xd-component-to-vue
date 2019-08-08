@@ -19,6 +19,34 @@ form {
     display: flex;
 }
 
+/* COMPONENTS TAB */
+.components {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.components__left {
+    flex: 1 0 40%;
+}
+
+.components__right {
+    flex: 1 0 60%;
+}
+
+.components__right textarea {
+    height: 320px;
+}
+
+.components__right .components__right-buttons {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.components__right .components__right-buttons button {
+    flex: 1 0 25%;
+}
+
+/* VARIABLES TAB */
 .variables {
     display: flex;
     flex-wrap: wrap;

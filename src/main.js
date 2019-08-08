@@ -5,7 +5,7 @@ const manifest = require('../manifest.json');
 
 let dialog;
 
-const getDialog = selection => {
+const getDialog = (selection, documentRoot) => {
     if (!dialog) {
         document.body.insertAdjacentHTML('beforeend', '<dialog><div id="container"></div></dialog>');
 
@@ -20,6 +20,8 @@ const getDialog = selection => {
                 return {
                     dialog,
                     manifest,
+                    selection,
+                    documentRoot,
                 };
             },
             render(h) {
@@ -27,6 +29,8 @@ const getDialog = selection => {
                     props: { 
                         dialog, 
                         manifest,
+                        selection,
+                        documentRoot,
                     },
                 });
             }
@@ -38,8 +42,8 @@ const getDialog = selection => {
 
 module.exports = {
     commands: {
-        exportToVue: selection => {
-            getDialog(selection).showModal();
+        exportToVue: (selection, documentRoot) => {
+            getDialog(selection, documentRoot).showModal();
         }
     }
 };

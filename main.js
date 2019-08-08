@@ -107,7 +107,7 @@ module.exports = JSON.parse("{\"summary\":\"Export Adobe XD component to Vue.js\
 
 exports = module.exports = __webpack_require__(/*! ../node_modules/css-loader/dist/runtime/api.js */ "./node_modules/css-loader/dist/runtime/api.js")(false);
 // Module
-exports.push([module.i, ".h-hide {\n    display: none !important;\n}\n\nform {\n    position: relative;\n    width: 1024px;\n}\n\n.notification {\n    position: absolute;\n    top: 7px;\n    right: 8px;\n    max-width: 700px;\n    text-align: right;\n}\n\n.menu {\n    display: flex;\n}\n\n.variables {\n    display: flex;\n    flex-wrap: wrap;\n}\n\n.variables textarea {\n    height: 320px;\n}\n\n.variables__left {\n    flex: 1 0 50%;\n}\n\n.variables__right {\n    flex: 1 0 50%;\n}\n", ""]);
+exports.push([module.i, ".h-hide {\n    display: none !important;\n}\n\nform {\n    position: relative;\n    width: 1024px;\n}\n\n.notification {\n    position: absolute;\n    top: 7px;\n    right: 8px;\n    max-width: 700px;\n    text-align: right;\n}\n\n.menu {\n    display: flex;\n}\n\n/* COMPONENTS TAB */\n.components {\n    display: flex;\n    flex-wrap: wrap;\n}\n\n.components__left {\n    flex: 1 0 40%;\n}\n\n.components__right {\n    flex: 1 0 60%;\n}\n\n.components__right textarea {\n    height: 320px;\n}\n\n.components__right .components__right-buttons {\n    display: flex;\n    flex-wrap: wrap;\n}\n\n.components__right .components__right-buttons button {\n    flex: 1 0 25%;\n}\n\n/* VARIABLES TAB */\n.variables {\n    display: flex;\n    flex-wrap: wrap;\n}\n\n.variables textarea {\n    height: 320px;\n}\n\n.variables__left {\n    flex: 1 0 50%;\n}\n\n.variables__right {\n    flex: 1 0 50%;\n}\n", ""]);
 
 
 /***/ }),
@@ -1253,15 +1253,44 @@ exports.clearImmediate = (typeof self !== "undefined" && self.clearImmediate) ||
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 
 const application = __webpack_require__(/*! application */ "application");
 const clipboard = __webpack_require__(/*! clipboard */ "clipboard");
 const assets = __webpack_require__(/*! assets */ "assets");
+const { 
+    SymbolInstance, 
+    Group, 
+    RepeatGrid, 
+    LinkedGraphic, 
+    Artboard, 
+    Rectangle, 
+    Ellipse, 
+    Polygon, 
+    Line, 
+    Path, 
+    BooleanGroup, 
+    Text
+} = __webpack_require__(/*! scenegraph */ "scenegraph"); // https://adobexdplatform.com/plugin-docs/reference/scenegraph.html#scenegraph
+const { generateVue } = __webpack_require__(/*! ./helpers/generate-vue */ "./src/helpers/generate-vue.js");
 
 module.exports = {
     props: {
         dialog: Object,
-        manifest: Object
+        manifest: Object,
+        selection: Object,
+        documentRoot: Object,
     },
 
     data() {
@@ -1273,10 +1302,54 @@ module.exports = {
             isFirstTab: true,
             assetsColors: [],
             assetsTypography: [],
+            currentComponent: null,
         }
     },
 
     computed: {
+        components() {
+            const components = [];
+
+            // парсим проект
+            // ФУНКЦИЯ СОБИРАЕТ НЕ ВСЕ КОМПОНЕНТЫ, ОНА СМОТРИТ ТОЛЬКО ПОВЕРХНОСТНО // ПЕРЕПИСАТЬ
+            this.documentRoot.children.forEach(node => {
+                if (node instanceof Artboard) {
+                    const moreComponents = node.children.filter(artboardChild => {
+                        return artboardChild instanceof SymbolInstance;
+                    });
+                    components.push(...moreComponents);
+                } else if (node instanceof SymbolInstance) {
+                    components.push(node);
+                }
+            });
+
+            return components.map(o => {
+                return {
+                    guid: o.guid,
+                    name: o.name + (o.isMaster ? ' (master)' : ''),
+                    artboardName: o.parent.name, // ПЕРЕПИСАТЬ
+                    component: o,
+                };
+            });
+        },
+
+        htmlOfComponent: {
+            get() {
+                // парсим текущий выбранный компонент
+                let result = '';
+
+                if (this.currentComponent) {
+                    const { name, html } = generateVue(this.currentComponent);
+                    result = html;
+                }
+
+                return result;
+            },
+            set(newValue) {
+
+            }
+        },
+
         scssVariables: {
             get() {
                 let result = '';
@@ -1329,6 +1402,12 @@ module.exports = {
                 color: 'red'
             });
         }
+
+        // set currentComponent
+        const items = this.selection.itemsIncludingLocked;
+        if (items.length === 1 && items[0] instanceof SymbolInstance) {
+            this.currentComponent = items[0];
+        }
     },
 
     methods: {
@@ -1340,8 +1419,15 @@ module.exports = {
             }, 3000);
         },
 
+        selectChangeComponent($event) {
+            this.currentComponent = this.components.filter(o => o.guid === this.$refs.componentSelect.value)[0].component;
+        },
+
         copySCSSVariablesToClipboard() {
-            clipboard.copyText(this.scssVariables);
+            console.log(123);
+            application.editDocument(() => clipboard.copyText(this.scssVariables))
+            //clipboard.copyText(this.scssVariables);
+            console.log(124);
 
             this.showNotification({
                 text: 'Colors for SCSS is now available on the clipboard',
@@ -1433,11 +1519,86 @@ var render = function() {
     _vm._v(" "),
     _c("hr"),
     _vm._v(" "),
-    _c("div", { class: { "h-hide": !_vm.isFirstTab } }, [
-      _c("p", [
-        _vm._v("\n            Button has been clicked times.\n        ")
-      ])
-    ]),
+    _c(
+      "div",
+      { staticClass: "components", class: { "h-hide": !_vm.isFirstTab } },
+      [
+        _c("div", { staticClass: "components__left" }, [
+          _c("h2", [_vm._v("Settings")]),
+          _vm._v(" "),
+          _c(
+            "select",
+            {
+              ref: "componentSelect",
+              on: {
+                change: function($event) {
+                  return _vm.selectChangeComponent($event)
+                }
+              }
+            },
+            [
+              _c("option", { attrs: { disabled: "", selected: "" } }, [
+                _vm._v("Choose component")
+              ]),
+              _vm._v(" "),
+              _vm._l(_vm.components, function(item) {
+                return _c("option", {
+                  key: item.guid,
+                  domProps: {
+                    value: item.guid,
+                    selected:
+                      _vm.currentComponent &&
+                      item.guid === _vm.currentComponent.guid,
+                    innerHTML: _vm._s(item.artboardName + " // " + item.name)
+                  }
+                })
+              })
+            ],
+            2
+          ),
+          _vm._v(" "),
+          _vm._m(0),
+          _vm._v(" "),
+          _c("img", { attrs: { src: "" } })
+        ]),
+        _vm._v(" "),
+        _c("div", { staticClass: "components__right" }, [
+          _c("h2", {
+            domProps: {
+              innerHTML: _vm._s(
+                "" +
+                  (_vm.currentComponent
+                    ? _vm.currentComponent.name
+                    : "Choose component for export to *.vue")
+              )
+            }
+          }),
+          _vm._v(" "),
+          _c("textarea", {
+            directives: [
+              {
+                name: "model",
+                rawName: "v-model",
+                value: _vm.htmlOfComponent,
+                expression: "htmlOfComponent"
+              }
+            ],
+            attrs: { readonly: "" },
+            domProps: { value: _vm.htmlOfComponent },
+            on: {
+              input: function($event) {
+                if ($event.target.composing) {
+                  return
+                }
+                _vm.htmlOfComponent = $event.target.value
+              }
+            }
+          }),
+          _vm._v(" "),
+          _vm._m(1)
+        ])
+      ]
+    ),
     _vm._v(" "),
     _c(
       "div",
@@ -1467,14 +1628,16 @@ var render = function() {
             }
           }),
           _vm._v(" "),
-          _c(
-            "button",
-            {
-              attrs: { "uxp-quiet": "true", "uxp-variant": "primary" },
-              on: { click: _vm.copySCSSVariablesToClipboard }
-            },
-            [_vm._v("Copy colors")]
-          )
+          _c("div", [
+            _c(
+              "button",
+              {
+                attrs: { "uxp-quiet": "true", "uxp-variant": "primary" },
+                on: { click: _vm.copySCSSVariablesToClipboard }
+              },
+              [_vm._v("Copy colors")]
+            )
+          ])
         ]),
         _vm._v(" "),
         _c("div", { staticClass: "variables__right" }, [
@@ -1501,14 +1664,16 @@ var render = function() {
             }
           }),
           _vm._v(" "),
-          _c(
-            "button",
-            {
-              attrs: { "uxp-quiet": "true", "uxp-variant": "primary" },
-              on: { click: _vm.copyTypographyVariablesToClipboard }
-            },
-            [_vm._v("Copy typography")]
-          )
+          _c("div", [
+            _c(
+              "button",
+              {
+                attrs: { "uxp-quiet": "true", "uxp-variant": "primary" },
+                on: { click: _vm.copyTypographyVariablesToClipboard }
+              },
+              [_vm._v("Copy typography")]
+            )
+          ])
         ])
       ]
     ),
@@ -1531,7 +1696,40 @@ var render = function() {
     ])
   ])
 }
-var staticRenderFns = []
+var staticRenderFns = [
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("div", [
+      _c("input", {
+        attrs: {
+          "uxp-quiet": "true",
+          type: "text",
+          placeholder: "First setting"
+        }
+      })
+    ])
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("div", { staticClass: "components__right-buttons" }, [
+      _c(
+        "button",
+        { attrs: { "uxp-quiet": "true", "uxp-variant": "primary" } },
+        [_vm._v("Copy component")]
+      ),
+      _vm._v(" "),
+      _c(
+        "button",
+        { attrs: { "uxp-quiet": "true", "uxp-variant": "primary" } },
+        [_vm._v("Save to file")]
+      )
+    ])
+  }
+]
 render._withStripped = true
 
 
@@ -10194,6 +10392,278 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
+/***/ "./src/helpers/generate-vue.js":
+/*!*************************************!*\
+  !*** ./src/helpers/generate-vue.js ***!
+  \*************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+const { 
+    SymbolInstance, 
+    Group, 
+    RepeatGrid, 
+    LinkedGraphic, 
+    Artboard, 
+    Rectangle, 
+    Ellipse, 
+    Polygon, 
+    Line, 
+    Path, 
+    BooleanGroup, 
+    Text
+} = __webpack_require__(/*! scenegraph */ "scenegraph");
+
+// создание html-тегов
+const createElement = (tag, attributes, ...children) => {
+    const element = document.createElement(tag);
+
+    if (attributes) {
+        for (let name in attributes) {
+            const value = attributes[name];
+
+            if (name === 'styles') {
+                // Object.assign(element.style, value); // не нужно добавлять стили в html
+            } else if (name === 'html') {
+                element.innerHTML = value;
+            } else {
+                element.setAttribute(name, value);
+            }
+        }
+    }
+
+    // for (let child of children) {
+    //     element.appendChild(typeof child === 'object' ? child : document.createTextNode(child));
+    // }
+
+    return element;
+};
+
+exports.createElement = createElement;
+
+const standardizeString = string => {
+    return string.toLowerCase().replace(/\ /g, '-');
+};
+
+exports.standardizeString = standardizeString;
+
+const parseLayers = (xdNode, domArray, componentName) => {
+    xdNode.children.forEach(xdNode => {
+        const classElementName = '__' + standardizeString(xdNode.name);
+
+        const nodeObject = {
+            tag: 'div',
+            attributes: {
+                class: componentName + classElementName,
+                styles: {},
+                html: '',
+            },
+            classElementName,
+            childrens: []
+        };
+
+        let canPlace = false;
+
+        // simple group
+        if (xdNode instanceof Group) {
+            canPlace = true;
+            nodeObject.childrens = parseLayers(xdNode, nodeObject.childrens, componentName);
+        }
+
+        // компонент в компоненте вставляем как компонент <component />
+        else if (xdNode instanceof SymbolInstance) {
+
+        }
+
+        else if (xdNode instanceof RepeatGrid) {
+
+        }
+
+        else if (xdNode instanceof LinkedGraphic) {
+
+        }
+
+        // else if (node instanceof RootNode) {
+
+        // }
+
+        // GraphicNode
+        // else if (node instanceof Artboard) {
+
+        // }
+
+        else if (xdNode instanceof Rectangle) {
+            canPlace = true;
+            nodeObject.attributes.styles = {
+                'width': xdNode.width + 'px',
+                'border': xdNode.strokeWidth + 'px solid ' + xdNode.stroke.toHex(false),
+                'border-radius': xdNode.hasRoundedCorners ? xdNode.cornerRadii.topLeft + 'px' : '',
+                'background': xdNode.fill.toHex(false)
+            };
+        }
+
+        // else if (node instanceof Ellipse) {
+
+        // }
+
+        // else if (node instanceof Polygon) {
+
+        // }
+
+        else if (xdNode instanceof Line) {
+
+        }
+
+        // else if (node instanceof Path) {
+
+        // }
+
+        // else if (node instanceof BooleanGroup) {
+
+        // }
+
+        else if (xdNode instanceof Text) {
+            canPlace = true;
+            nodeObject.attributes.html = xdNode.text;
+            if (xdNode.areaBox) {
+                nodeObject.attributes.styles['width'] = xdNode.areaBox.width + 'px';
+            }
+            nodeObject.attributes.styles['font-family'] = xdNode.fontFamily;
+            nodeObject.attributes.styles['font-size'] = xdNode.fontSize + 'px';
+            if (xdNode.lineSpacing !== 0) {
+                nodeObject.attributes.styles['line-height'] = '(' + xdNode.lineSpacing + ' / ' + xdNode.fontSize + ')';
+            }
+            // nodeObject.attributes.styles['font-weight'] = xdNode.fontStyle,
+            nodeObject.attributes.styles['font-style'] = xdNode.fontStyle; // здесь нужно парсить слова 'Regular' Narrow Italic и т.д.
+            if (xdNode.charSpacing !== 0) {
+                nodeObject.attributes.styles['letter-spacing'] = xdNode.charSpacing + 'em';
+            }
+            if (xdNode.underline) {
+                nodeObject.attributes.styles['text-decoration'] = 'underline';
+            }
+            if (xdNode.textTransform !== 'none') {
+                nodeObject.attributes.styles['text-transform'] = xdNode.textTransform;
+            }
+            if (xdNode.textAlign !== 'ALIGN_LEFT') {
+                if (xdNode.textAlign === 'ALIGN_CENTER') {
+                    nodeObject.attributes.styles['text-align'] = 'center';
+                } else if (xdNode.textAlign === 'ALIGN_RIGHT') {
+                    nodeObject.attributes.styles['text-align'] = 'right';
+                }
+            }
+            nodeObject.attributes.styles['color'] = xdNode.fill.toHex(false);
+        }
+
+        if (canPlace) {
+            domArray.push(nodeObject);
+        }
+    });
+
+    return domArray;
+};
+
+exports.parseLayers = parseLayers;
+
+const generateSCSS = (string, nodesArray, level) => {
+    const indent = new Array(level + 1).join('    ');
+    const indentStyles = new Array(level + 2).join('    ');
+
+    nodesArray.forEach((object, i) => {
+        string += indent + '&' + object.classElementName + ' {\n';
+        for (let name in object.attributes.styles) {
+            const value = object.attributes.styles[name];
+            string += indentStyles + name + ': ' + value + ';\n';
+        }
+        string += indent + '}';
+
+        if (i !== nodesArray.length - 1) {
+            string += '\n\n';
+        }
+
+        // if (object.childrens.length > 0) {
+        //     generateSCSS(element, object.childrens);
+        // }
+    });
+
+    return string;
+};
+
+exports.generateSCSS = generateSCSS;
+
+const generateHTML = (parent, nodesArray) => {
+    nodesArray.forEach(object => {
+        const element = createElement(object.tag, object.attributes);
+        parent.insertAdjacentElement('beforeend', element);
+
+        if (object.childrens.length > 0) {
+            generateHTML(element, object.childrens);
+        }
+    });
+
+    return parent;
+};
+
+exports.generateHTML = generateHTML;
+
+const formatHTML = (node, level) => {
+    const indentBefore = new Array(level++ + 1).join('    ');
+    const indentAfter = new Array(level - 1).join('    ');
+    let textNode;
+
+    for (let i = 0; i < node.children.length; i++) {
+        textNode = document.createTextNode('\n' + indentBefore);
+        node.insertBefore(textNode, node.children[i]);
+
+        formatHTML(node.children[i], level);
+
+        if (node.lastElementChild === node.children[i]) {
+            textNode = document.createTextNode('\n' + indentAfter);
+            node.appendChild(textNode);
+        }
+    }
+
+    return node;
+};
+
+exports.formatHTML = formatHTML;
+
+const generateVue = component => {
+    const name = standardizeString(component.name);
+
+    // парсим главный объект чтобы получить html
+    const domArray = parseLayers(component, [], name);
+
+    // генерируем стили
+    const scss = generateSCSS('', domArray, 1);
+
+    // создаем корневой элемент
+    const root = generateHTML(document.createElement('div'), domArray);
+    root.setAttribute('class', name);
+
+    // конвертируем html в красивую строку
+    var div = document.createElement('div');
+    div.innerHTML = root.outerHTML;
+
+    let html = `<template>${formatHTML(div, 1).innerHTML}</template>
+
+<script>
+export default {};
+</script>
+
+<style lang="scss">
+.${name} {
+${scss}
+}
+</style>
+`;
+    
+    return { name, html };
+};
+
+exports.generateVue = generateVue;
+
+/***/ }),
+
 /***/ "./src/main.js":
 /*!*********************!*\
   !*** ./src/main.js ***!
@@ -10208,7 +10678,7 @@ const manifest = __webpack_require__(/*! ../manifest.json */ "./manifest.json");
 
 let dialog;
 
-const getDialog = selection => {
+const getDialog = (selection, documentRoot) => {
     if (!dialog) {
         document.body.insertAdjacentHTML('beforeend', '<dialog><div id="container"></div></dialog>');
 
@@ -10223,6 +10693,8 @@ const getDialog = selection => {
                 return {
                     dialog,
                     manifest,
+                    selection,
+                    documentRoot,
                 };
             },
             render(h) {
@@ -10230,6 +10702,8 @@ const getDialog = selection => {
                     props: { 
                         dialog, 
                         manifest,
+                        selection,
+                        documentRoot,
                     },
                 });
             }
@@ -10241,8 +10715,8 @@ const getDialog = selection => {
 
 module.exports = {
     commands: {
-        exportToVue: selection => {
-            getDialog(selection).showModal();
+        exportToVue: (selection, documentRoot) => {
+            getDialog(selection, documentRoot).showModal();
         }
     }
 };
@@ -10309,6 +10783,17 @@ module.exports = require("assets");
 /***/ (function(module, exports) {
 
 module.exports = require("clipboard");
+
+/***/ }),
+
+/***/ "scenegraph":
+/*!*****************************!*\
+  !*** external "scenegraph" ***!
+  \*****************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = require("scenegraph");
 
 /***/ })
 
