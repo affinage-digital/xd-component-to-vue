@@ -38,13 +38,9 @@ const createElement = (tag, attributes, ...children) => {
     return element;
 };
 
-exports.createElement = createElement;
-
 const standardizeString = string => {
     return string.toLowerCase().replace(/\ /g, '-');
 };
-
-exports.standardizeString = standardizeString;
 
 const parseLayers = (xdNode, domArray, componentName) => {
     xdNode.children.forEach(xdNode => {
@@ -161,8 +157,6 @@ const parseLayers = (xdNode, domArray, componentName) => {
     return domArray;
 };
 
-exports.parseLayers = parseLayers;
-
 const generateSCSS = (string, nodesArray, level) => {
     const indent = new Array(level + 1).join('    ');
     const indentStyles = new Array(level + 2).join('    ');
@@ -187,8 +181,6 @@ const generateSCSS = (string, nodesArray, level) => {
     return string;
 };
 
-exports.generateSCSS = generateSCSS;
-
 const generateHTML = (parent, nodesArray) => {
     nodesArray.forEach(object => {
         const element = createElement(object.tag, object.attributes);
@@ -201,8 +193,6 @@ const generateHTML = (parent, nodesArray) => {
 
     return parent;
 };
-
-exports.generateHTML = generateHTML;
 
 const formatHTML = (node, level) => {
     const indentBefore = new Array(level++ + 1).join('    ');
@@ -223,8 +213,6 @@ const formatHTML = (node, level) => {
 
     return node;
 };
-
-exports.formatHTML = formatHTML;
 
 const generateVue = component => {
     const name = standardizeString(component.name);

@@ -107,7 +107,7 @@ module.exports = JSON.parse("{\"summary\":\"Export Adobe XD component to Vue.js\
 
 exports = module.exports = __webpack_require__(/*! ../node_modules/css-loader/dist/runtime/api.js */ "./node_modules/css-loader/dist/runtime/api.js")(false);
 // Module
-exports.push([module.i, ".h-hide {\n    display: none !important;\n}\n\nform {\n    position: relative;\n    width: 1024px;\n}\n\n.notification {\n    position: absolute;\n    top: 7px;\n    right: 8px;\n    max-width: 700px;\n    text-align: right;\n}\n\n.menu {\n    display: flex;\n}\n\n/* COMPONENTS TAB */\n.components {\n    display: flex;\n    flex-wrap: wrap;\n}\n\n.components__left {\n    flex: 1 0 40%;\n}\n\n.components__right {\n    flex: 1 0 60%;\n}\n\n.components__right textarea {\n    height: 320px;\n}\n\n.components__right .components__right-buttons {\n    display: flex;\n    flex-wrap: wrap;\n}\n\n.components__right .components__right-buttons button {\n    flex: 1 0 25%;\n}\n\n/* VARIABLES TAB */\n.variables {\n    display: flex;\n    flex-wrap: wrap;\n}\n\n.variables textarea {\n    height: 320px;\n}\n\n.variables__left {\n    flex: 1 0 50%;\n}\n\n.variables__right {\n    flex: 1 0 50%;\n}\n", ""]);
+exports.push([module.i, ".h-hide {\n    display: none !important;\n}\n\nform {\n    position: relative;\n    width: 1024px;\n}\n\n.notification {\n    position: absolute;\n    top: 7px;\n    right: 8px;\n    max-width: 700px;\n    text-align: right;\n}\n\n.menu {\n    display: flex;\n}\n\n/* COMPONENTS TAB */\n.components {\n    display: flex;\n    flex-wrap: wrap;\n}\n\n.components__left {\n    flex: 1 0 40%;\n}\n\n.components__left-preview {\n    padding: 10px;\n    background: #e4e4e4;\n    margin: 0 8px;\n}\n\n.components__left-preview img {\n    display: block;\n    width: 100%;\n    height: 200px;\n    object-fit: contain;\n}\n\n.components__right {\n    flex: 1 0 60%;\n}\n\n.components__right textarea {\n    height: 320px;\n}\n\n.components__right-buttons {\n    display: flex;\n    flex-wrap: wrap;\n}\n\n.components__right-buttons button {\n    flex: 1 0 25%;\n}\n\n/* VARIABLES TAB */\n.variables {\n    display: flex;\n    flex-wrap: wrap;\n}\n\n.variables textarea {\n    height: 320px;\n}\n\n.variables__left {\n    flex: 1 0 50%;\n}\n\n.variables__right {\n    flex: 1 0 50%;\n}\n", ""]);
 
 
 /***/ }),
@@ -1265,6 +1265,11 @@ exports.clearImmediate = (typeof self !== "undefined" && self.clearImmediate) ||
 //
 //
 //
+//
+//
+//
+//
+//
 
 const application = __webpack_require__(/*! application */ "application");
 const clipboard = __webpack_require__(/*! clipboard */ "clipboard");
@@ -1284,6 +1289,8 @@ const {
     Text
 } = __webpack_require__(/*! scenegraph */ "scenegraph"); // https://adobexdplatform.com/plugin-docs/reference/scenegraph.html#scenegraph
 const { generateVue } = __webpack_require__(/*! ./helpers/generate-vue */ "./src/helpers/generate-vue.js");
+const { saveComponentAsFile } = __webpack_require__(/*! ./helpers/save-file */ "./src/helpers/save-file.js");
+const { createPreviewOfComponent } = __webpack_require__(/*! ./helpers/component-preview */ "./src/helpers/component-preview.js");
 
 module.exports = {
     props: {
@@ -1297,12 +1304,17 @@ module.exports = {
         return {
             notification: {
                 text: '',
-                color: 'red'
+                color: 'red',
             },
             isFirstTab: true,
             assetsColors: [],
             assetsTypography: [],
-            currentComponent: null,
+            currentComponent: {
+                node: null,
+                name: '',
+                preview: '',
+                html: '',
+            },
         }
     },
 
@@ -1331,23 +1343,6 @@ module.exports = {
                     component: o,
                 };
             });
-        },
-
-        htmlOfComponent: {
-            get() {
-                // парсим текущий выбранный компонент
-                let result = '';
-
-                if (this.currentComponent) {
-                    const { name, html } = generateVue(this.currentComponent);
-                    result = html;
-                }
-
-                return result;
-            },
-            set(newValue) {
-
-            }
         },
 
         scssVariables: {
@@ -1399,14 +1394,14 @@ module.exports = {
         if (this.assetsColors.filter(color => !color.name).length > 0) {
             this.showNotification({
                 text: 'No-name colors available',
-                color: 'red'
+                color: 'red',
             });
         }
 
         // set currentComponent
         const items = this.selection.itemsIncludingLocked;
         if (items.length === 1 && items[0] instanceof SymbolInstance) {
-            this.currentComponent = items[0];
+            this.currentComponent.node = items[0];
         }
     },
 
@@ -1419,20 +1414,71 @@ module.exports = {
             }, 3000);
         },
 
+        copyToClipboard(text) {
+            const handler = event => {
+                application.editDocument(() => clipboard.copyText('проверь меня'));
+
+                this.showNotification({
+                    text: 'Текст успешно скопирован',
+                    color: 'green',
+                });
+            };
+
+            this.$refs.linkForFakeClick.addEventListener('click', () => {
+                //application.editDocument(() => clipboard.copyText('проверь меня'));
+                clipboard.copyText('проверь меня');
+            });
+
+            this.$refs.linkForFakeClick.dispatchEvent(new Event('click'));
+
+            this.$refs.linkForFakeClick.removeEventListener('click', handler);
+        },
+
         selectChangeComponent($event) {
-            this.currentComponent = this.components.filter(o => o.guid === this.$refs.componentSelect.value)[0].component;
+            const searchedComponents = this.components.filter(o => o.guid === this.$refs.componentSelect.value);
+
+            if (searchedComponents.length > 0) {
+                this.currentComponent.node = searchedComponents[0].component;
+            } else {
+                this.currentComponent.node = null;
+            }
+
+            if (this.currentComponent.node) {
+                const { name, html } = generateVue(this.currentComponent.node);
+                this.currentComponent.name = name;
+                this.currentComponent.html = html;
+
+                createPreviewOfComponent(this.currentComponent.node).then(base64string => {
+                    this.currentComponent.preview = base64string;
+                });
+            } else {
+                this.currentComponent.name = '';
+                this.currentComponent.preview = '';
+                this.currentComponent.html = '';
+            }
+        },
+
+        saveComponent() {
+            saveComponentAsFile(this.currentComponent.name, this.currentComponent.html).then(() => {
+                this.showNotification({
+                    text: 'Component successfully saved!',
+                    color: 'green',
+                });
+            });
         },
 
         copySCSSVariablesToClipboard() {
-            console.log(123);
-            application.editDocument(() => clipboard.copyText(this.scssVariables))
-            //clipboard.copyText(this.scssVariables);
-            console.log(124);
+            this.copy();
+            // console.log(123);
+            // //application.editDocument(() => clipboard.copyText(this.scssVariables));
+            // this.copyToClipboard(this.scssVariables);
+            // //clipboard.copyText(this.scssVariables);
+            // console.log(124);
 
-            this.showNotification({
-                text: 'Colors for SCSS is now available on the clipboard',
-                color: 'green'
-            });
+            // this.showNotification({
+            //     text: 'Colors for SCSS is now available on the clipboard',
+            //     color: 'green',
+            // });
         },
 
         copyTypographyVariablesToClipboard() {
@@ -1440,7 +1486,7 @@ module.exports = {
 
             this.showNotification({
                 text: 'Typography for SCSS is now available on the clipboard',
-                color: 'green'
+                color: 'green',
             });
         }
     }
@@ -1465,6 +1511,16 @@ var render = function() {
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
   return _c("form", { attrs: { method: "dialog" } }, [
+    _c(
+      "a",
+      {
+        ref: "linkForFakeClick",
+        staticClass: "h-hide",
+        attrs: { href: "javascript:;" }
+      },
+      [_vm._v("for fake click to clipboard")]
+    ),
+    _vm._v(" "),
     _c("h1", { domProps: { innerHTML: _vm._s(_vm.manifest.name) } }),
     _vm._v(" "),
     _c("div", {
@@ -1547,8 +1603,8 @@ var render = function() {
                   domProps: {
                     value: item.guid,
                     selected:
-                      _vm.currentComponent &&
-                      item.guid === _vm.currentComponent.guid,
+                      _vm.currentComponent.node &&
+                      item.guid === _vm.currentComponent.node.guid,
                     innerHTML: _vm._s(item.artboardName + " // " + item.name)
                   }
                 })
@@ -1559,7 +1615,9 @@ var render = function() {
           _vm._v(" "),
           _vm._m(0),
           _vm._v(" "),
-          _c("img", { attrs: { src: "" } })
+          _c("div", { staticClass: "components__left-preview" }, [
+            _c("img", { attrs: { src: _vm.currentComponent.preview } })
+          ])
         ]),
         _vm._v(" "),
         _c("div", { staticClass: "components__right" }, [
@@ -1567,8 +1625,8 @@ var render = function() {
             domProps: {
               innerHTML: _vm._s(
                 "" +
-                  (_vm.currentComponent
-                    ? _vm.currentComponent.name
+                  (_vm.currentComponent.node
+                    ? _vm.currentComponent.node.name
                     : "Choose component for export to *.vue")
               )
             }
@@ -1579,23 +1637,38 @@ var render = function() {
               {
                 name: "model",
                 rawName: "v-model",
-                value: _vm.htmlOfComponent,
-                expression: "htmlOfComponent"
+                value: _vm.currentComponent.html,
+                expression: "currentComponent.html"
               }
             ],
             attrs: { readonly: "" },
-            domProps: { value: _vm.htmlOfComponent },
+            domProps: { value: _vm.currentComponent.html },
             on: {
               input: function($event) {
                 if ($event.target.composing) {
                   return
                 }
-                _vm.htmlOfComponent = $event.target.value
+                _vm.$set(_vm.currentComponent, "html", $event.target.value)
               }
             }
           }),
           _vm._v(" "),
-          _vm._m(1)
+          _c("div", { staticClass: "components__right-buttons" }, [
+            _c(
+              "button",
+              { attrs: { "uxp-quiet": "true", "uxp-variant": "primary" } },
+              [_vm._v("Copy component")]
+            ),
+            _vm._v(" "),
+            _c(
+              "button",
+              {
+                attrs: { "uxp-quiet": "true", "uxp-variant": "primary" },
+                on: { click: _vm.saveComponent }
+              },
+              [_vm._v("Save to file")]
+            )
+          ])
         ])
       ]
     ),
@@ -1709,24 +1782,6 @@ var staticRenderFns = [
           placeholder: "First setting"
         }
       })
-    ])
-  },
-  function() {
-    var _vm = this
-    var _h = _vm.$createElement
-    var _c = _vm._self._c || _h
-    return _c("div", { staticClass: "components__right-buttons" }, [
-      _c(
-        "button",
-        { attrs: { "uxp-quiet": "true", "uxp-variant": "primary" } },
-        [_vm._v("Copy component")]
-      ),
-      _vm._v(" "),
-      _c(
-        "button",
-        { attrs: { "uxp-quiet": "true", "uxp-variant": "primary" } },
-        [_vm._v("Save to file")]
-      )
     ])
   }
 ]
@@ -10392,6 +10447,90 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
+/***/ "./src/helpers/component-preview.js":
+/*!******************************************!*\
+  !*** ./src/helpers/component-preview.js ***!
+  \******************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+const application = __webpack_require__(/*! application */ "application");
+const { localFileSystem, formats } = __webpack_require__(/*! uxp */ "uxp").storage;
+
+const base64ArrayBuffer = arrayBuffer => {
+    let base64 = '';
+    const encodings = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+
+    const bytes = new Uint8Array(arrayBuffer);
+    const byteLength = bytes.byteLength;
+    const byteRemainder = byteLength % 3;
+    const mainLength = byteLength - byteRemainder;
+
+    let a, b, c, d;
+    let chunk;
+
+    // Main loop deals with bytes in chunks of 3
+    for (var i = 0; i < mainLength; i = i + 3) {
+        // Combine the three bytes into a single integer
+        chunk = (bytes[i] << 16) | (bytes[i + 1] << 8) | bytes[i + 2];
+
+        // Use bitmasks to extract 6-bit segments from the triplet
+        a = (chunk & 16515072) >> 18; // 16515072 = (2^6 - 1) << 18
+        b = (chunk & 258048) >> 12; // 258048 = (2^6 - 1) << 12
+        c = (chunk & 4032) >> 6; // 4032 = (2^6 - 1) << 6
+        d = chunk & 63; // 63 = 2^6 - 1
+
+        // Convert the raw binary segments to the appropriate ASCII encoding
+        base64 += encodings[a] + encodings[b] + encodings[c] + encodings[d];
+    }
+
+    // Deal with the remaining bytes and padding
+    if (byteRemainder == 1) {
+        chunk = bytes[mainLength];
+
+        a = (chunk & 252) >> 2; // 252 = (2^6 - 1) << 2
+
+        // Set the 4 least significant bits to zero
+        b = (chunk & 3) << 4; // 3   = 2^2 - 1
+
+        base64 += encodings[a] + encodings[b] + '==';
+    } else if (byteRemainder == 2) {
+        chunk = (bytes[mainLength] << 8) | bytes[mainLength + 1];
+
+        a = (chunk & 64512) >> 10; // 64512 = (2^6 - 1) << 10
+        b = (chunk & 1008) >> 4; // 1008  = (2^6 - 1) << 4
+
+        // Set the 2 least significant bits to zero
+        c = (chunk & 15) << 2; // 15 = 2^4 - 1
+
+        base64 += encodings[a] + encodings[b] + encodings[c] + '=';
+    }
+
+    return base64;
+};
+
+const createPreviewOfComponent = node => {
+    return localFileSystem.getTemporaryFolder().then(tempFolder => {
+        return tempFolder.createFile('component-to-vue-preview-temp-file.png', { overwrite: true }).then(tempFile => { // node.guid + '.png'
+            return application.createRenditions([{
+                node,
+                outputFile: tempFile,
+                type: 'png',
+                scale: 1,
+            }]).then(results => {
+                return results[0].outputFile.read({ format: formats.binary }).then(arrayBuffer => {
+                    return 'data:image/png;base64,' + base64ArrayBuffer(arrayBuffer);
+                });
+            });
+        });
+    });
+};
+
+exports.createPreviewOfComponent = createPreviewOfComponent;
+
+
+/***/ }),
+
 /***/ "./src/helpers/generate-vue.js":
 /*!*************************************!*\
   !*** ./src/helpers/generate-vue.js ***!
@@ -10439,13 +10578,9 @@ const createElement = (tag, attributes, ...children) => {
     return element;
 };
 
-exports.createElement = createElement;
-
 const standardizeString = string => {
     return string.toLowerCase().replace(/\ /g, '-');
 };
-
-exports.standardizeString = standardizeString;
 
 const parseLayers = (xdNode, domArray, componentName) => {
     xdNode.children.forEach(xdNode => {
@@ -10562,8 +10697,6 @@ const parseLayers = (xdNode, domArray, componentName) => {
     return domArray;
 };
 
-exports.parseLayers = parseLayers;
-
 const generateSCSS = (string, nodesArray, level) => {
     const indent = new Array(level + 1).join('    ');
     const indentStyles = new Array(level + 2).join('    ');
@@ -10588,8 +10721,6 @@ const generateSCSS = (string, nodesArray, level) => {
     return string;
 };
 
-exports.generateSCSS = generateSCSS;
-
 const generateHTML = (parent, nodesArray) => {
     nodesArray.forEach(object => {
         const element = createElement(object.tag, object.attributes);
@@ -10602,8 +10733,6 @@ const generateHTML = (parent, nodesArray) => {
 
     return parent;
 };
-
-exports.generateHTML = generateHTML;
 
 const formatHTML = (node, level) => {
     const indentBefore = new Array(level++ + 1).join('    ');
@@ -10624,8 +10753,6 @@ const formatHTML = (node, level) => {
 
     return node;
 };
-
-exports.formatHTML = formatHTML;
 
 const generateVue = component => {
     const name = standardizeString(component.name);
@@ -10662,6 +10789,29 @@ ${scss}
 
 exports.generateVue = generateVue;
 
+
+/***/ }),
+
+/***/ "./src/helpers/save-file.js":
+/*!**********************************!*\
+  !*** ./src/helpers/save-file.js ***!
+  \**********************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+const fs = __webpack_require__(/*! uxp */ "uxp").storage.localFileSystem;
+
+const saveComponentAsFile = (name, html) => {
+    return fs.getFolder().then(folder => {
+        return folder.createFile(name + '.vue', { overwrite: true }).then(file => {
+            return file.write(html);
+        });
+    });
+};
+
+exports.saveComponentAsFile = saveComponentAsFile;
+
+
 /***/ }),
 
 /***/ "./src/main.js":
@@ -10675,6 +10825,8 @@ const styles = __webpack_require__(/*! ./styles.css */ "./src/styles.css"); // �
 const Vue = __webpack_require__(/*! vue */ "./node_modules/vue/dist/vue.runtime.esm.js").default;
 const app = __webpack_require__(/*! ./app.vue */ "./src/app.vue").default;
 const manifest = __webpack_require__(/*! ../manifest.json */ "./manifest.json");
+const application = __webpack_require__(/*! application */ "application");
+const clipboard = __webpack_require__(/*! clipboard */ "clipboard");
 
 let dialog;
 
@@ -10683,6 +10835,18 @@ const getDialog = (selection, documentRoot) => {
         document.body.insertAdjacentHTML('beforeend', '<dialog><div id="container"></div></dialog>');
 
         dialog = document.querySelector('dialog');
+
+        Vue.mixin({
+            methods: {
+                copy: str => {
+                    application.editDocument(selection2 => {
+                        console.log(selection2);
+
+                        //clipboard.copyText('selection.items[0].name333');
+                    });
+                },
+            },
+        });
 
         new Vue({
             el: '#container',
@@ -10794,6 +10958,17 @@ module.exports = require("clipboard");
 /***/ (function(module, exports) {
 
 module.exports = require("scenegraph");
+
+/***/ }),
+
+/***/ "uxp":
+/*!**********************!*\
+  !*** external "uxp" ***!
+  \**********************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = require("uxp");
 
 /***/ })
 

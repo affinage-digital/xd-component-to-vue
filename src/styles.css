@@ -29,6 +29,19 @@ form {
     flex: 1 0 40%;
 }
 
+.components__left-preview {
+    padding: 10px;
+    background: #e4e4e4;
+    margin: 0 8px;
+}
+
+.components__left-preview img {
+    display: block;
+    width: 100%;
+    height: 200px;
+    object-fit: contain;
+}
+
 .components__right {
     flex: 1 0 60%;
 }
@@ -37,12 +50,12 @@ form {
     height: 320px;
 }
 
-.components__right .components__right-buttons {
+.components__right-buttons {
     display: flex;
     flex-wrap: wrap;
 }
 
-.components__right .components__right-buttons button {
+.components__right-buttons button {
     flex: 1 0 25%;
 }
 

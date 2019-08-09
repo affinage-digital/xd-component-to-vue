@@ -1,5 +1,7 @@
 <template>
     <form method="dialog">
+        <a ref="linkForFakeClick" class="h-hide" href="javascript:;">for fake click to clipboard</a>
+
         <h1 v-html="manifest.name"></h1>
         <div class="notification" v-show="notification.text.length > 0"
             :style="{ color: notification.color }"
@@ -19,7 +21,7 @@
                     <option disabled selected>Choose component</option>
                     <option v-for="item in components" :key="item.guid"
                         :value="item.guid"
-                        :selected="currentComponent && item.guid === currentComponent.guid"
+                        :selected="currentComponent.node && item.guid === currentComponent.node.guid"
                         v-html="`${ item.artboardName } // ${ item.name }`"></option>
                 </select>
                 
@@ -27,15 +29,18 @@
                     <input uxp-quiet="true" type="text" placeholder="First setting" /><!-- v-model="" -->
                 </div>
 
-                <img src="" />
+                <div class="components__left-preview">
+                    <img :src="currentComponent.preview" />
+                </div>
             </div>
 
             <div class="components__right">
-                <h2 v-html="`${currentComponent ? currentComponent.name : 'Choose component for export to *.vue'}`"></h2>
-                <textarea readonly v-model="htmlOfComponent"></textarea>
+                <h2 v-html="`${currentComponent.node ? currentComponent.node.name : 'Choose component for export to *.vue'}`"></h2>
+                <textarea readonly v-model="currentComponent.html"></textarea>
+
                 <div class="components__right-buttons">
                     <button uxp-quiet="true" uxp-variant="primary">Copy component</button>
-                    <button uxp-quiet="true" uxp-variant="primary">Save to file</button>
+                    <button uxp-quiet="true" uxp-variant="primary" @click="saveComponent">Save to file</button>
                 </div>
             </div>
         </div>
@@ -85,6 +90,8 @@ const {
     Text
 } = require('scenegraph'); // https://adobexdplatform.com/plugin-docs/reference/scenegraph.html#scenegraph
 const { generateVue } = require('./helpers/generate-vue');
+const { saveComponentAsFile } = require('./helpers/save-file');
+const { createPreviewOfComponent } = require('./helpers/component-preview');
 
 module.exports = {
     props: {
@@ -98,12 +105,17 @@ module.exports = {
         return {
             notification: {
                 text: '',
-                color: 'red'
+                color: 'red',
             },
             isFirstTab: true,
             assetsColors: [],
             assetsTypography: [],
-            currentComponent: null,
+            currentComponent: {
+                node: null,
+                name: '',
+                preview: '',
+                html: '',
+            },
         }
     },
 
@@ -132,23 +144,6 @@ module.exports = {
                     component: o,
                 };
             });
-        },
-
-        htmlOfComponent: {
-            get() {
-                // парсим текущий выбранный компонент
-                let result = '';
-
-                if (this.currentComponent) {
-                    const { name, html } = generateVue(this.currentComponent);
-                    result = html;
-                }
-
-                return result;
-            },
-            set(newValue) {
-
-            }
         },
 
         scssVariables: {
@@ -200,14 +195,14 @@ module.exports = {
         if (this.assetsColors.filter(color => !color.name).length > 0) {
             this.showNotification({
                 text: 'No-name colors available',
-                color: 'red'
+                color: 'red',
             });
         }
 
         // set currentComponent
         const items = this.selection.itemsIncludingLocked;
         if (items.length === 1 && items[0] instanceof SymbolInstance) {
-            this.currentComponent = items[0];
+            this.currentComponent.node = items[0];
         }
     },
 
@@ -220,20 +215,71 @@ module.exports = {
             }, 3000);
         },
 
+        copyToClipboard(text) {
+            const handler = event => {
+                application.editDocument(() => clipboard.copyText('проверь меня'));
+
+                this.showNotification({
+                    text: 'Текст успешно скопирован',
+                    color: 'green',
+                });
+            };
+
+            this.$refs.linkForFakeClick.addEventListener('click', () => {
+                //application.editDocument(() => clipboard.copyText('проверь меня'));
+                clipboard.copyText('проверь меня');
+            });
+
+            this.$refs.linkForFakeClick.dispatchEvent(new Event('click'));
+
+            this.$refs.linkForFakeClick.removeEventListener('click', handler);
+        },
+
         selectChangeComponent($event) {
-            this.currentComponent = this.components.filter(o => o.guid === this.$refs.componentSelect.value)[0].component;
+            const searchedComponents = this.components.filter(o => o.guid === this.$refs.componentSelect.value);
+
+            if (searchedComponents.length > 0) {
+                this.currentComponent.node = searchedComponents[0].component;
+            } else {
+                this.currentComponent.node = null;
+            }
+
+            if (this.currentComponent.node) {
+                const { name, html } = generateVue(this.currentComponent.node);
+                this.currentComponent.name = name;
+                this.currentComponent.html = html;
+
+                createPreviewOfComponent(this.currentComponent.node).then(base64string => {
+                    this.currentComponent.preview = base64string;
+                });
+            } else {
+                this.currentComponent.name = '';
+                this.currentComponent.preview = '';
+                this.currentComponent.html = '';
+            }
+        },
+
+        saveComponent() {
+            saveComponentAsFile(this.currentComponent.name, this.currentComponent.html).then(() => {
+                this.showNotification({
+                    text: 'Component successfully saved!',
+                    color: 'green',
+                });
+            });
         },
 
         copySCSSVariablesToClipboard() {
-            console.log(123);
-            application.editDocument(() => clipboard.copyText(this.scssVariables))
-            //clipboard.copyText(this.scssVariables);
-            console.log(124);
+            this.copy();
+            // console.log(123);
+            // //application.editDocument(() => clipboard.copyText(this.scssVariables));
+            // this.copyToClipboard(this.scssVariables);
+            // //clipboard.copyText(this.scssVariables);
+            // console.log(124);
 
-            this.showNotification({
-                text: 'Colors for SCSS is now available on the clipboard',
-                color: 'green'
-            });
+            // this.showNotification({
+            //     text: 'Colors for SCSS is now available on the clipboard',
+            //     color: 'green',
+            // });
         },
 
         copyTypographyVariablesToClipboard() {
@@ -241,7 +287,7 @@ module.exports = {
 
             this.showNotification({
                 text: 'Typography for SCSS is now available on the clipboard',
-                color: 'green'
+                color: 'green',
             });
         }
     }
