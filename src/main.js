@@ -1,4 +1,4 @@
-const styles = require('./styles.css'); // добавляем стили для dialog
+const styles = require('./styles.css'); // add style for dialog
 const Vue = require('vue').default;
 const app = require('./app.vue').default;
 const manifest = require('../manifest.json');
@@ -6,6 +6,7 @@ const application = require('application');
 const clipboard = require('clipboard');
 
 let dialog;
+let appVue;
 
 const getDialog = (selection, documentRoot) => {
     if (!dialog) {
@@ -25,7 +26,7 @@ const getDialog = (selection, documentRoot) => {
             },
         });
 
-        new Vue({
+        appVue = new Vue({
             el: '#container',
             components: {
                 app,
@@ -55,6 +56,9 @@ const getDialog = (selection, documentRoot) => {
 };
 
 module.exports = {
+    getVueAppClass: () => {
+        return appVue.$children[0]; // for get actual app in inner js files from webpack require()
+    },
     commands: {
         exportToVue: (selection, documentRoot) => {
             getDialog(selection, documentRoot).showModal();

@@ -108,7 +108,7 @@ module.exports = {
                 color: 'red',
             },
             isFirstTab: true,
-            assetsColors: [],
+            assetsColors: {},
             assetsTypography: [],
             currentComponent: {
                 node: null,
@@ -123,8 +123,8 @@ module.exports = {
         components() {
             const components = [];
 
-            // парсим проект
-            // ФУНКЦИЯ СОБИРАЕТ НЕ ВСЕ КОМПОНЕНТЫ, ОНА СМОТРИТ ТОЛЬКО ПОВЕРХНОСТНО // ПЕРЕПИСАТЬ
+            // parsing project
+            // FUNCTION DOES NOT COLLECT ALL COMPONENTS, IT SEES ONLY FIRST TREE LEVEL // REWRITE
             this.documentRoot.children.forEach(node => {
                 if (node instanceof Artboard) {
                     const moreComponents = node.children.filter(artboardChild => {
@@ -140,7 +140,7 @@ module.exports = {
                 return {
                     guid: o.guid,
                     name: o.name + (o.isMaster ? ' (master)' : ''),
-                    artboardName: o.parent.name, // ПЕРЕПИСАТЬ
+                    artboardName: o.parent.name, // Rewrite
                     component: o,
                 };
             });
@@ -149,24 +149,10 @@ module.exports = {
         scssVariables: {
             get() {
                 let result = '';
-
-                this.assetsColors.forEach(color => {
-                    if (color.color) {
-                        let cssColor = color.color.toHex(false);
-                        if (color.color.a < 255) {
-                            cssColor = `rgba(${cssColor}, ${parseFloat(color.color.a / 255).toFixed(2)})`;
-                        }
-
-                        let name = color.name;
-                        if (name) {
-                            name = 'color' + name.charAt(0).toUpperCase() + name.substr(1);
-                        } else {
-                            name = 'color' + color.color.toHex(false).substr(1);
-                        }
-
-                        result += `$${name}:\t\t${cssColor};\n`;
-                    }
-                });
+                
+                for (const color in this.assetsColors) {
+                    result += `${ this.assetsColors[color] }:\t\t${ color };\n`;
+                }
 
                 return result;
             },
@@ -189,15 +175,8 @@ module.exports = {
 
     mounted() {
         // load assets
-        this.assetsColors = assets.colors.get();
+        this.parseAssetsColors();
         this.assetsTypography = assets.characterStyles.get();
-
-        if (this.assetsColors.filter(color => !color.name).length > 0) {
-            this.showNotification({
-                text: 'No-name colors available',
-                color: 'red',
-            });
-        }
 
         // set currentComponent
         const items = this.selection.itemsIncludingLocked;
@@ -215,19 +194,48 @@ module.exports = {
             }, 3000);
         },
 
+        parseAssetsColors() {
+            const tempColors = assets.colors.get();
+
+            if (tempColors.filter(color => !color.name).length > 0) {
+                this.showNotification({
+                    text: 'No-name colors available',
+                    color: 'red',
+                });
+            }
+
+            tempColors.forEach(color => {
+                if (color.color) {
+                    let cssColor = color.color.toHex(false);
+                    if (color.color.a < 255) {
+                        cssColor = `rgba(${cssColor}, ${parseFloat(color.color.a / 255).toFixed(2)})`;
+                    }
+
+                    let name = color.name;
+                    if (name) {
+                        name = '$color' + name.charAt(0).toUpperCase() + name.substr(1);
+                    } else {
+                        name = '$color' + color.color.toHex(false).substr(1);
+                    }
+
+                    this.$set(this.assetsColors, cssColor, name);
+                }
+            });
+        },
+
         copyToClipboard(text) {
             const handler = event => {
-                application.editDocument(() => clipboard.copyText('проверь меня'));
+                application.editDocument(() => clipboard.copyText('check me'));
 
                 this.showNotification({
-                    text: 'Текст успешно скопирован',
+                    text: 'Text copied successfully',
                     color: 'green',
                 });
             };
 
             this.$refs.linkForFakeClick.addEventListener('click', () => {
-                //application.editDocument(() => clipboard.copyText('проверь меня'));
-                clipboard.copyText('проверь меня');
+                //application.editDocument(() => clipboard.copyText('check me'));
+                clipboard.copyText('check me');
             });
 
             this.$refs.linkForFakeClick.dispatchEvent(new Event('click'));

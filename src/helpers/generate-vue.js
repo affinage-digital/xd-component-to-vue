@@ -1,19 +1,7 @@
-const { 
-    SymbolInstance, 
-    Group, 
-    RepeatGrid, 
-    LinkedGraphic, 
-    Artboard, 
-    Rectangle, 
-    Ellipse, 
-    Polygon, 
-    Line, 
-    Path, 
-    BooleanGroup, 
-    Text
-} = require('scenegraph');
+const { standardizeString } = require('./standardize-string');
+const { parseLayers } = require('./parse-layers');
 
-// создание html-тегов
+// creating of html-tags
 const createElement = (tag, attributes, ...children) => {
     const element = document.createElement(tag);
 
@@ -22,7 +10,7 @@ const createElement = (tag, attributes, ...children) => {
             const value = attributes[name];
 
             if (name === 'styles') {
-                // Object.assign(element.style, value); // не нужно добавлять стили в html
+                // Object.assign(element.style, value); // dont need add inline-styles
             } else if (name === 'html') {
                 element.innerHTML = value;
             } else {
@@ -36,125 +24,6 @@ const createElement = (tag, attributes, ...children) => {
     // }
 
     return element;
-};
-
-const standardizeString = string => {
-    return string.toLowerCase().replace(/\ /g, '-');
-};
-
-const parseLayers = (xdNode, domArray, componentName) => {
-    xdNode.children.forEach(xdNode => {
-        const classElementName = '__' + standardizeString(xdNode.name);
-
-        const nodeObject = {
-            tag: 'div',
-            attributes: {
-                class: componentName + classElementName,
-                styles: {},
-                html: '',
-            },
-            classElementName,
-            childrens: []
-        };
-
-        let canPlace = false;
-
-        // simple group
-        if (xdNode instanceof Group) {
-            canPlace = true;
-            nodeObject.childrens = parseLayers(xdNode, nodeObject.childrens, componentName);
-        }
-
-        // компонент в компоненте вставляем как компонент <component />
-        else if (xdNode instanceof SymbolInstance) {
-
-        }
-
-        else if (xdNode instanceof RepeatGrid) {
-
-        }
-
-        else if (xdNode instanceof LinkedGraphic) {
-
-        }
-
-        // else if (node instanceof RootNode) {
-
-        // }
-
-        // GraphicNode
-        // else if (node instanceof Artboard) {
-
-        // }
-
-        else if (xdNode instanceof Rectangle) {
-            canPlace = true;
-            nodeObject.attributes.styles = {
-                'width': xdNode.width + 'px',
-                'border': xdNode.strokeWidth + 'px solid ' + xdNode.stroke.toHex(false),
-                'border-radius': xdNode.hasRoundedCorners ? xdNode.cornerRadii.topLeft + 'px' : '',
-                'background': xdNode.fill.toHex(false)
-            };
-        }
-
-        // else if (node instanceof Ellipse) {
-
-        // }
-
-        // else if (node instanceof Polygon) {
-
-        // }
-
-        else if (xdNode instanceof Line) {
-
-        }
-
-        // else if (node instanceof Path) {
-
-        // }
-
-        // else if (node instanceof BooleanGroup) {
-
-        // }
-
-        else if (xdNode instanceof Text) {
-            canPlace = true;
-            nodeObject.attributes.html = xdNode.text;
-            if (xdNode.areaBox) {
-                nodeObject.attributes.styles['width'] = xdNode.areaBox.width + 'px';
-            }
-            nodeObject.attributes.styles['font-family'] = xdNode.fontFamily;
-            nodeObject.attributes.styles['font-size'] = xdNode.fontSize + 'px';
-            if (xdNode.lineSpacing !== 0) {
-                nodeObject.attributes.styles['line-height'] = '(' + xdNode.lineSpacing + ' / ' + xdNode.fontSize + ')';
-            }
-            // nodeObject.attributes.styles['font-weight'] = xdNode.fontStyle,
-            nodeObject.attributes.styles['font-style'] = xdNode.fontStyle; // здесь нужно парсить слова 'Regular' Narrow Italic и т.д.
-            if (xdNode.charSpacing !== 0) {
-                nodeObject.attributes.styles['letter-spacing'] = xdNode.charSpacing + 'em';
-            }
-            if (xdNode.underline) {
-                nodeObject.attributes.styles['text-decoration'] = 'underline';
-            }
-            if (xdNode.textTransform !== 'none') {
-                nodeObject.attributes.styles['text-transform'] = xdNode.textTransform;
-            }
-            if (xdNode.textAlign !== 'ALIGN_LEFT') {
-                if (xdNode.textAlign === 'ALIGN_CENTER') {
-                    nodeObject.attributes.styles['text-align'] = 'center';
-                } else if (xdNode.textAlign === 'ALIGN_RIGHT') {
-                    nodeObject.attributes.styles['text-align'] = 'right';
-                }
-            }
-            nodeObject.attributes.styles['color'] = xdNode.fill.toHex(false);
-        }
-
-        if (canPlace) {
-            domArray.push(nodeObject);
-        }
-    });
-
-    return domArray;
 };
 
 const generateSCSS = (string, nodesArray, level) => {
@@ -173,9 +42,9 @@ const generateSCSS = (string, nodesArray, level) => {
             string += '\n\n';
         }
 
-        // if (object.childrens.length > 0) {
-        //     generateSCSS(element, object.childrens);
-        // }
+        if (object.childrens.length > 0) {
+            string = generateSCSS(string + '\n\n', object.childrens, level);
+        }
     });
 
     return string;
@@ -217,17 +86,17 @@ const formatHTML = (node, level) => {
 const generateVue = component => {
     const name = standardizeString(component.name);
 
-    // парсим главный объект чтобы получить html
+    // parsing the component to get html and scss
     const domArray = parseLayers(component, [], name);
 
-    // генерируем стили
+    // generate styles
     const scss = generateSCSS('', domArray, 1);
 
-    // создаем корневой элемент
+    // create the root element
     const root = generateHTML(document.createElement('div'), domArray);
     root.setAttribute('class', name);
 
-    // конвертируем html в красивую строку
+    // convert html to formatted string
     var div = document.createElement('div');
     div.innerHTML = root.outerHTML;
 
