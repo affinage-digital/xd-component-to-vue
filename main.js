@@ -1295,9 +1295,11 @@ const { createPreviewOfComponent } = __webpack_require__(/*! ./helpers/component
 module.exports = {
     props: {
         dialog: Object,
+        elementForCopy: Object,
         manifest: Object,
         selection: Object,
         documentRoot: Object,
+        copyToClipboard: Function,
     },
 
     data() {
@@ -1422,26 +1424,6 @@ module.exports = {
             });
         },
 
-        copyToClipboard(text) {
-            const handler = event => {
-                application.editDocument(() => clipboard.copyText('check me'));
-
-                this.showNotification({
-                    text: 'Text copied successfully',
-                    color: 'green',
-                });
-            };
-
-            this.$refs.linkForFakeClick.addEventListener('click', () => {
-                //application.editDocument(() => clipboard.copyText('check me'));
-                clipboard.copyText('check me');
-            });
-
-            this.$refs.linkForFakeClick.dispatchEvent(new Event('click'));
-
-            this.$refs.linkForFakeClick.removeEventListener('click', handler);
-        },
-
         selectChangeComponent($event) {
             const searchedComponents = this.components.filter(o => o.guid === this.$refs.componentSelect.value);
 
@@ -1475,22 +1457,26 @@ module.exports = {
             });
         },
 
-        copySCSSVariablesToClipboard() {
-            this.copy();
-            // console.log(123);
-            // //application.editDocument(() => clipboard.copyText(this.scssVariables));
-            // this.copyToClipboard(this.scssVariables);
-            // //clipboard.copyText(this.scssVariables);
-            // console.log(124);
+        copyComponentToClipboard() {
+            this.copyToClipboard(this.currentComponent.html);
 
-            // this.showNotification({
-            //     text: 'Colors for SCSS is now available on the clipboard',
-            //     color: 'green',
-            // });
+            this.showNotification({
+                text: 'Vue template of component is now available on the clipboard',
+                color: 'green',
+            });
+        },
+
+        copySCSSVariablesToClipboard() {
+            this.copyToClipboard(this.scssVariables);
+
+            this.showNotification({
+                text: 'Colors for SCSS is now available on the clipboard',
+                color: 'green',
+            });
         },
 
         copyTypographyVariablesToClipboard() {
-            clipboard.copyText(this.typographyVariables);
+            this.copyToClipboard(this.typographyVariables);
 
             this.showNotification({
                 text: 'Typography for SCSS is now available on the clipboard',
@@ -1664,7 +1650,10 @@ var render = function() {
           _c("div", { staticClass: "components__right-buttons" }, [
             _c(
               "button",
-              { attrs: { "uxp-quiet": "true", "uxp-variant": "primary" } },
+              {
+                attrs: { "uxp-quiet": "true", "uxp-variant": "primary" },
+                on: { click: _vm.copyComponentToClipboard }
+              },
               [_vm._v("Copy component")]
             ),
             _vm._v(" "),
@@ -10872,11 +10861,14 @@ const styles = __webpack_require__(/*! ./styles.css */ "./src/styles.css"); // a
 const Vue = __webpack_require__(/*! vue */ "./node_modules/vue/dist/vue.runtime.esm.js").default;
 const app = __webpack_require__(/*! ./app.vue */ "./src/app.vue").default;
 const manifest = __webpack_require__(/*! ../manifest.json */ "./manifest.json");
-const application = __webpack_require__(/*! application */ "application");
 const clipboard = __webpack_require__(/*! clipboard */ "clipboard");
 
 let dialog;
 let appVue;
+
+const copyToClipboard = string => {
+    clipboard.copyText(string);
+};
 
 const getDialog = (selection, documentRoot) => {
     if (!dialog) {
@@ -10884,38 +10876,19 @@ const getDialog = (selection, documentRoot) => {
 
         dialog = document.querySelector('dialog');
 
-        Vue.mixin({
-            methods: {
-                copy: str => {
-                    application.editDocument(selection2 => {
-                        console.log(selection2);
-
-                        //clipboard.copyText('selection.items[0].name333');
-                    });
-                },
-            },
-        });
-
         appVue = new Vue({
             el: '#container',
             components: {
                 app,
             },
-            data() {
-                return {
-                    dialog,
-                    manifest,
-                    selection,
-                    documentRoot,
-                };
-            },
             render(h) {
-                return h(app, { 
-                    props: { 
-                        dialog, 
+                return h(app, {
+                    props: {
+                        dialog,
                         manifest,
                         selection,
                         documentRoot,
+                        copyToClipboard,
                     },
                 });
             }
@@ -10930,8 +10903,8 @@ module.exports = {
         return appVue.$children[0]; // for get actual app in inner js files from webpack require()
     },
     commands: {
-        exportToVue: (selection, documentRoot) => {
-            getDialog(selection, documentRoot).showModal();
+        exportToVue: async (selection, documentRoot) => {
+            await getDialog(selection, documentRoot).showModal();
         }
     }
 };

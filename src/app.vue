@@ -39,7 +39,7 @@
                 <textarea readonly v-model="currentComponent.html"></textarea>
 
                 <div class="components__right-buttons">
-                    <button uxp-quiet="true" uxp-variant="primary">Copy component</button>
+                    <button uxp-quiet="true" uxp-variant="primary" @click="copyComponentToClipboard">Copy component</button>
                     <button uxp-quiet="true" uxp-variant="primary" @click="saveComponent">Save to file</button>
                 </div>
             </div>
@@ -96,9 +96,11 @@ const { createPreviewOfComponent } = require('./helpers/component-preview');
 module.exports = {
     props: {
         dialog: Object,
+        elementForCopy: Object,
         manifest: Object,
         selection: Object,
         documentRoot: Object,
+        copyToClipboard: Function,
     },
 
     data() {
@@ -223,26 +225,6 @@ module.exports = {
             });
         },
 
-        copyToClipboard(text) {
-            const handler = event => {
-                application.editDocument(() => clipboard.copyText('check me'));
-
-                this.showNotification({
-                    text: 'Text copied successfully',
-                    color: 'green',
-                });
-            };
-
-            this.$refs.linkForFakeClick.addEventListener('click', () => {
-                //application.editDocument(() => clipboard.copyText('check me'));
-                clipboard.copyText('check me');
-            });
-
-            this.$refs.linkForFakeClick.dispatchEvent(new Event('click'));
-
-            this.$refs.linkForFakeClick.removeEventListener('click', handler);
-        },
-
         selectChangeComponent($event) {
             const searchedComponents = this.components.filter(o => o.guid === this.$refs.componentSelect.value);
 
@@ -276,22 +258,26 @@ module.exports = {
             });
         },
 
-        copySCSSVariablesToClipboard() {
-            this.copy();
-            // console.log(123);
-            // //application.editDocument(() => clipboard.copyText(this.scssVariables));
-            // this.copyToClipboard(this.scssVariables);
-            // //clipboard.copyText(this.scssVariables);
-            // console.log(124);
+        copyComponentToClipboard() {
+            this.copyToClipboard(this.currentComponent.html);
 
-            // this.showNotification({
-            //     text: 'Colors for SCSS is now available on the clipboard',
-            //     color: 'green',
-            // });
+            this.showNotification({
+                text: 'Vue template of component is now available on the clipboard',
+                color: 'green',
+            });
+        },
+
+        copySCSSVariablesToClipboard() {
+            this.copyToClipboard(this.scssVariables);
+
+            this.showNotification({
+                text: 'Colors for SCSS is now available on the clipboard',
+                color: 'green',
+            });
         },
 
         copyTypographyVariablesToClipboard() {
-            clipboard.copyText(this.typographyVariables);
+            this.copyToClipboard(this.typographyVariables);
 
             this.showNotification({
                 text: 'Typography for SCSS is now available on the clipboard',
