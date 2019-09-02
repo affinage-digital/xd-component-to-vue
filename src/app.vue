@@ -17,25 +17,42 @@
         <div class="components" :class="{ 'h-hide': !isFirstTab }">
             <div class="components__left">
                 <h2>Settings</h2>
-                <select ref="componentSelect" @change="selectChangeComponent($event)">
+
+                <div class="components__row">
+                    <label for="option-only-master">Only Master components</label>
+                    <input id="option-only-master" type="checkbox" v-model="options.onlyMasterComponent" @change="changeComponent" />
+                </div>
+
+                <div class="components__row components__row--mr8">
+                    <label for="option-tab-size">Tab size</label>
+                    <input id="option-tab-size" uxp-quiet="true" type="number" v-model="options.tabSize" @input="changeComponent" />
+                </div>
+
+                <div class="components__row">
+                    <label for="option-use-typograf">Use typograf for texts</label>
+                    <input id="option-use-typograf" type="checkbox" v-model="options.useTypograf" @change="changeComponent" />
+                </div>
+            </div>
+
+            <div class="components__center">
+                <h2>Component</h2>
+
+                <select ref="componentSelect" @change="changeComponent">
                     <option disabled selected>Choose component</option>
                     <option v-for="item in components" :key="item.guid"
                         :value="item.guid"
                         :selected="currentComponent.node && item.guid === currentComponent.node.guid"
                         v-html="`${ item.artboardName } // ${ item.name }`"></option>
                 </select>
-                
-                <div>
-                    <input uxp-quiet="true" type="text" placeholder="First setting" /><!-- v-model="" -->
-                </div>
 
-                <div class="components__left-preview">
+                <div class="components__center-preview">
                     <img :src="currentComponent.preview" />
                 </div>
             </div>
 
             <div class="components__right">
-                <h2 v-html="`${currentComponent.node ? currentComponent.node.name : 'Choose component for export to *.vue'}`"></h2>
+                <h2 v-html="`${currentComponent.node ? currentComponent.name : 'Choose component for export to *.vue'}`"></h2>
+
                 <textarea readonly v-model="currentComponent.html"></textarea>
 
                 <div class="components__right-buttons">
@@ -118,6 +135,11 @@ module.exports = {
                 preview: '',
                 html: '',
             },
+            options: {
+                onlyMasterComponent: false,
+                tabSize: 4,
+                useTypograf: false,
+            }
         }
     },
 
@@ -125,27 +147,45 @@ module.exports = {
         components() {
             const components = [];
 
-            // parsing project
-            // FUNCTION DOES NOT COLLECT ALL COMPONENTS, IT SEES ONLY FIRST TREE LEVEL // REWRITE
-            this.documentRoot.children.forEach(node => {
-                if (node instanceof Artboard) {
-                    const moreComponents = node.children.filter(artboardChild => {
-                        return artboardChild instanceof SymbolInstance;
-                    });
-                    components.push(...moreComponents);
-                } else if (node instanceof SymbolInstance) {
-                    components.push(node);
-                }
-            });
+            const push = component => {
+                if (this.options.onlyMasterComponent && !component.isMaster) return;
 
-            return components.map(o => {
-                return {
-                    guid: o.guid,
-                    name: o.name + (o.isMaster ? ' (master)' : ''),
-                    artboardName: o.parent.name, // Rewrite
-                    component: o,
-                };
-            });
+                // check artboard name if exist
+                let artboardName = 'Canvas';
+
+                let tempNode = component;
+                const parentsType = [];
+                while (tempNode) {
+                    if (tempNode.constructor.name === 'Artboard') {
+                        artboardName = tempNode.name;
+                    }
+                    tempNode = tempNode.parent;
+                }
+
+                components.push({
+                    guid: component.guid,
+                    name: component.name + (component.isMaster ? ' (master)' : ''),
+                    artboardName,
+                    component,
+                });
+            };
+
+            // parsing project
+            const finderSymbolInstance = rootNode => {
+                rootNode.children.forEach(node => {
+                    if (node instanceof SymbolInstance) {
+                        push(node);
+                    }
+
+                    if (node.children.length > 0) {
+                        finderSymbolInstance(node);
+                    }
+                });
+            };
+
+            finderSymbolInstance(this.documentRoot);
+
+            return components;
         },
 
         scssVariables: {
@@ -176,18 +216,28 @@ module.exports = {
     },
 
     mounted() {
-        // load assets
-        this.parseAssetsColors();
-        this.assetsTypography = assets.characterStyles.get();
-
-        // set currentComponent
-        const items = this.selection.itemsIncludingLocked;
-        if (items.length === 1 && items[0] instanceof SymbolInstance) {
-            this.currentComponent.node = items[0];
-        }
+        this.loadUI();
     },
 
     methods: {
+        loadUI() {
+            // load assets
+            this.parseAssetsColors();
+            this.assetsTypography = assets.characterStyles.get();
+
+            // set currentComponent
+            const items = this.selection.itemsIncludingLocked;
+            if (items.length === 1 && items[0] instanceof SymbolInstance) {
+                this.currentComponent.node = items[0]; // for selected option in select-dropdown
+            } else {
+                this.$refs.componentSelect.selectedIndex = 0; // reset select-dropdown
+            }
+
+            this.$nextTick(() => {
+                this.changeComponent(); // for generate html
+            });
+        },
+
         showNotification(notification) {
             this.notification = notification;
 
@@ -225,7 +275,11 @@ module.exports = {
             });
         },
 
-        selectChangeComponent($event) {
+        changeComponent() {
+            if (this.$refs.componentSelect.value === undefined) {
+                this.$refs.componentSelect.selectedIndex = 0;
+            }
+
             const searchedComponents = this.components.filter(o => o.guid === this.$refs.componentSelect.value);
 
             if (searchedComponents.length > 0) {
@@ -235,8 +289,8 @@ module.exports = {
             }
 
             if (this.currentComponent.node) {
-                const { name, html } = generateVue(this.currentComponent.node);
-                this.currentComponent.name = name;
+                const { html } = generateVue(this.currentComponent.node, this.options);
+                this.currentComponent.name = this.currentComponent.node.name + (this.currentComponent.node.isMaster ? ' (master)' : '');
                 this.currentComponent.html = html;
 
                 createPreviewOfComponent(this.currentComponent.node).then(base64string => {

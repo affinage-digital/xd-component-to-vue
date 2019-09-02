@@ -107,7 +107,7 @@ module.exports = JSON.parse("{\"summary\":\"Export Adobe XD component to Vue.js\
 
 exports = module.exports = __webpack_require__(/*! ../node_modules/css-loader/dist/runtime/api.js */ "./node_modules/css-loader/dist/runtime/api.js")(false);
 // Module
-exports.push([module.i, ".h-hide {\n    display: none !important;\n}\n\nform {\n    position: relative;\n    width: 1024px;\n}\n\n.notification {\n    position: absolute;\n    top: 7px;\n    right: 8px;\n    max-width: 700px;\n    text-align: right;\n}\n\n.menu {\n    display: flex;\n}\n\n/* COMPONENTS TAB */\n.components {\n    display: flex;\n    flex-wrap: wrap;\n}\n\n.components__left {\n    flex: 1 0 40%;\n}\n\n.components__left-preview {\n    padding: 10px;\n    background: #fff;\n    margin: 0 8px;\n}\n\n.components__left-preview img {\n    display: block;\n    width: 100%;\n    height: 200px;\n    object-fit: contain;\n}\n\n.components__right {\n    flex: 1 0 60%;\n}\n\n.components__right textarea {\n    height: 320px;\n}\n\n.components__right-buttons {\n    display: flex;\n    flex-wrap: wrap;\n}\n\n.components__right-buttons button {\n    flex: 1 0 25%;\n}\n\n/* VARIABLES TAB */\n.variables {\n    display: flex;\n    flex-wrap: wrap;\n}\n\n.variables textarea {\n    height: 320px;\n}\n\n.variables__left {\n    flex: 1 0 50%;\n}\n\n.variables__right {\n    flex: 1 0 50%;\n}\n", ""]);
+exports.push([module.i, ".h-hide {\n    display: none !important;\n}\n\nform {\n    position: relative;\n    width: 1024px;\n}\n\n.notification {\n    position: absolute;\n    top: 7px;\n    right: 8px;\n    max-width: 700px;\n    text-align: right;\n}\n\n.menu {\n    display: flex;\n}\n\n/* COMPONENTS TAB */\n.components {\n    display: flex;\n    flex-wrap: wrap;\n    justify-content: space-between;\n}\n\n.components__left {\n    flex: 1 0 22%;\n}\n\n.components__row {\n    display: flex;\n    align-items: center;\n    justify-content: space-between;\n    margin: 0 0 4px 8px;\n}\n\n.components__row input[type=number] {\n    width: 50px;\n}\n\n.components__row--mr8 {\n    margin-right: 8px;\n}\n\n.components__center {\n    flex: 1 0 33%;\n    padding: 0 0 0 2%;\n}\n\n.components__center-preview {\n    padding: 10px;\n    background: #fff;\n    margin: 0 8px;\n}\n\n.components__center-preview img {\n    display: block;\n    width: 100%;\n    height: 260px;\n    object-fit: contain;\n}\n\n.components__right {\n    flex: 1 0 45%;\n}\n\n.components__right textarea {\n    height: 320px;\n}\n\n.components__right-buttons {\n    display: flex;\n    flex-wrap: wrap;\n}\n\n.components__right-buttons button {\n    flex: 1 0 25%;\n}\n\n/* VARIABLES TAB */\n.variables {\n    display: flex;\n    flex-wrap: wrap;\n}\n\n.variables textarea {\n    height: 320px;\n}\n\n.variables__left {\n    flex: 1 0 50%;\n}\n\n.variables__right {\n    flex: 1 0 50%;\n}\n", ""]);
 
 
 /***/ }),
@@ -1270,6 +1270,23 @@ exports.clearImmediate = (typeof self !== "undefined" && self.clearImmediate) ||
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 
 const application = __webpack_require__(/*! application */ "application");
 const clipboard = __webpack_require__(/*! clipboard */ "clipboard");
@@ -1317,6 +1334,11 @@ module.exports = {
                 preview: '',
                 html: '',
             },
+            options: {
+                onlyMasterComponent: false,
+                tabSize: 4,
+                useTypograf: false,
+            }
         }
     },
 
@@ -1324,27 +1346,45 @@ module.exports = {
         components() {
             const components = [];
 
-            // parsing project
-            // FUNCTION DOES NOT COLLECT ALL COMPONENTS, IT SEES ONLY FIRST TREE LEVEL // REWRITE
-            this.documentRoot.children.forEach(node => {
-                if (node instanceof Artboard) {
-                    const moreComponents = node.children.filter(artboardChild => {
-                        return artboardChild instanceof SymbolInstance;
-                    });
-                    components.push(...moreComponents);
-                } else if (node instanceof SymbolInstance) {
-                    components.push(node);
-                }
-            });
+            const push = component => {
+                if (this.options.onlyMasterComponent && !component.isMaster) return;
 
-            return components.map(o => {
-                return {
-                    guid: o.guid,
-                    name: o.name + (o.isMaster ? ' (master)' : ''),
-                    artboardName: o.parent.name, // Rewrite
-                    component: o,
-                };
-            });
+                // check artboard name if exist
+                let artboardName = 'Canvas';
+
+                let tempNode = component;
+                const parentsType = [];
+                while (tempNode) {
+                    if (tempNode.constructor.name === 'Artboard') {
+                        artboardName = tempNode.name;
+                    }
+                    tempNode = tempNode.parent;
+                }
+
+                components.push({
+                    guid: component.guid,
+                    name: component.name + (component.isMaster ? ' (master)' : ''),
+                    artboardName,
+                    component,
+                });
+            };
+
+            // parsing project
+            const finderSymbolInstance = rootNode => {
+                rootNode.children.forEach(node => {
+                    if (node instanceof SymbolInstance) {
+                        push(node);
+                    }
+
+                    if (node.children.length > 0) {
+                        finderSymbolInstance(node);
+                    }
+                });
+            };
+
+            finderSymbolInstance(this.documentRoot);
+
+            return components;
         },
 
         scssVariables: {
@@ -1375,18 +1415,28 @@ module.exports = {
     },
 
     mounted() {
-        // load assets
-        this.parseAssetsColors();
-        this.assetsTypography = assets.characterStyles.get();
-
-        // set currentComponent
-        const items = this.selection.itemsIncludingLocked;
-        if (items.length === 1 && items[0] instanceof SymbolInstance) {
-            this.currentComponent.node = items[0];
-        }
+        this.loadUI();
     },
 
     methods: {
+        loadUI() {
+            // load assets
+            this.parseAssetsColors();
+            this.assetsTypography = assets.characterStyles.get();
+
+            // set currentComponent
+            const items = this.selection.itemsIncludingLocked;
+            if (items.length === 1 && items[0] instanceof SymbolInstance) {
+                this.currentComponent.node = items[0]; // for selected option in select-dropdown
+            } else {
+                this.$refs.componentSelect.selectedIndex = 0; // reset select-dropdown
+            }
+
+            this.$nextTick(() => {
+                this.changeComponent(); // for generate html
+            });
+        },
+
         showNotification(notification) {
             this.notification = notification;
 
@@ -1424,7 +1474,11 @@ module.exports = {
             });
         },
 
-        selectChangeComponent($event) {
+        changeComponent() {
+            if (this.$refs.componentSelect.value === undefined) {
+                this.$refs.componentSelect.selectedIndex = 0;
+            }
+
             const searchedComponents = this.components.filter(o => o.guid === this.$refs.componentSelect.value);
 
             if (searchedComponents.length > 0) {
@@ -1434,8 +1488,8 @@ module.exports = {
             }
 
             if (this.currentComponent.node) {
-                const { name, html } = generateVue(this.currentComponent.node);
-                this.currentComponent.name = name;
+                const { html } = generateVue(this.currentComponent.node, this.options);
+                this.currentComponent.name = this.currentComponent.node.name + (this.currentComponent.node.isMaster ? ' (master)' : '');
                 this.currentComponent.html = html;
 
                 createPreviewOfComponent(this.currentComponent.node).then(base64string => {
@@ -1576,16 +1630,155 @@ var render = function() {
         _c("div", { staticClass: "components__left" }, [
           _c("h2", [_vm._v("Settings")]),
           _vm._v(" "),
+          _c("div", { staticClass: "components__row" }, [
+            _c("label", { attrs: { for: "option-only-master" } }, [
+              _vm._v("Only Master components")
+            ]),
+            _vm._v(" "),
+            _c("input", {
+              directives: [
+                {
+                  name: "model",
+                  rawName: "v-model",
+                  value: _vm.options.onlyMasterComponent,
+                  expression: "options.onlyMasterComponent"
+                }
+              ],
+              attrs: { id: "option-only-master", type: "checkbox" },
+              domProps: {
+                checked: Array.isArray(_vm.options.onlyMasterComponent)
+                  ? _vm._i(_vm.options.onlyMasterComponent, null) > -1
+                  : _vm.options.onlyMasterComponent
+              },
+              on: {
+                change: [
+                  function($event) {
+                    var $$a = _vm.options.onlyMasterComponent,
+                      $$el = $event.target,
+                      $$c = $$el.checked ? true : false
+                    if (Array.isArray($$a)) {
+                      var $$v = null,
+                        $$i = _vm._i($$a, $$v)
+                      if ($$el.checked) {
+                        $$i < 0 &&
+                          _vm.$set(
+                            _vm.options,
+                            "onlyMasterComponent",
+                            $$a.concat([$$v])
+                          )
+                      } else {
+                        $$i > -1 &&
+                          _vm.$set(
+                            _vm.options,
+                            "onlyMasterComponent",
+                            $$a.slice(0, $$i).concat($$a.slice($$i + 1))
+                          )
+                      }
+                    } else {
+                      _vm.$set(_vm.options, "onlyMasterComponent", $$c)
+                    }
+                  },
+                  _vm.changeComponent
+                ]
+              }
+            })
+          ]),
+          _vm._v(" "),
+          _c("div", { staticClass: "components__row components__row--mr8" }, [
+            _c("label", { attrs: { for: "option-tab-size" } }, [
+              _vm._v("Tab size")
+            ]),
+            _vm._v(" "),
+            _c("input", {
+              directives: [
+                {
+                  name: "model",
+                  rawName: "v-model",
+                  value: _vm.options.tabSize,
+                  expression: "options.tabSize"
+                }
+              ],
+              attrs: {
+                id: "option-tab-size",
+                "uxp-quiet": "true",
+                type: "number"
+              },
+              domProps: { value: _vm.options.tabSize },
+              on: {
+                input: [
+                  function($event) {
+                    if ($event.target.composing) {
+                      return
+                    }
+                    _vm.$set(_vm.options, "tabSize", $event.target.value)
+                  },
+                  _vm.changeComponent
+                ]
+              }
+            })
+          ]),
+          _vm._v(" "),
+          _c("div", { staticClass: "components__row" }, [
+            _c("label", { attrs: { for: "option-use-typograf" } }, [
+              _vm._v("Use typograf for texts")
+            ]),
+            _vm._v(" "),
+            _c("input", {
+              directives: [
+                {
+                  name: "model",
+                  rawName: "v-model",
+                  value: _vm.options.useTypograf,
+                  expression: "options.useTypograf"
+                }
+              ],
+              attrs: { id: "option-use-typograf", type: "checkbox" },
+              domProps: {
+                checked: Array.isArray(_vm.options.useTypograf)
+                  ? _vm._i(_vm.options.useTypograf, null) > -1
+                  : _vm.options.useTypograf
+              },
+              on: {
+                change: [
+                  function($event) {
+                    var $$a = _vm.options.useTypograf,
+                      $$el = $event.target,
+                      $$c = $$el.checked ? true : false
+                    if (Array.isArray($$a)) {
+                      var $$v = null,
+                        $$i = _vm._i($$a, $$v)
+                      if ($$el.checked) {
+                        $$i < 0 &&
+                          _vm.$set(
+                            _vm.options,
+                            "useTypograf",
+                            $$a.concat([$$v])
+                          )
+                      } else {
+                        $$i > -1 &&
+                          _vm.$set(
+                            _vm.options,
+                            "useTypograf",
+                            $$a.slice(0, $$i).concat($$a.slice($$i + 1))
+                          )
+                      }
+                    } else {
+                      _vm.$set(_vm.options, "useTypograf", $$c)
+                    }
+                  },
+                  _vm.changeComponent
+                ]
+              }
+            })
+          ])
+        ]),
+        _vm._v(" "),
+        _c("div", { staticClass: "components__center" }, [
+          _c("h2", [_vm._v("Component")]),
+          _vm._v(" "),
           _c(
             "select",
-            {
-              ref: "componentSelect",
-              on: {
-                change: function($event) {
-                  return _vm.selectChangeComponent($event)
-                }
-              }
-            },
+            { ref: "componentSelect", on: { change: _vm.changeComponent } },
             [
               _c("option", { attrs: { disabled: "", selected: "" } }, [
                 _vm._v("Choose component")
@@ -1607,9 +1800,7 @@ var render = function() {
             2
           ),
           _vm._v(" "),
-          _vm._m(0),
-          _vm._v(" "),
-          _c("div", { staticClass: "components__left-preview" }, [
+          _c("div", { staticClass: "components__center-preview" }, [
             _c("img", { attrs: { src: _vm.currentComponent.preview } })
           ])
         ]),
@@ -1620,7 +1811,7 @@ var render = function() {
               innerHTML: _vm._s(
                 "" +
                   (_vm.currentComponent.node
-                    ? _vm.currentComponent.node.name
+                    ? _vm.currentComponent.name
                     : "Choose component for export to *.vue")
               )
             }
@@ -1766,22 +1957,7 @@ var render = function() {
     ])
   ])
 }
-var staticRenderFns = [
-  function() {
-    var _vm = this
-    var _h = _vm.$createElement
-    var _c = _vm._self._c || _h
-    return _c("div", [
-      _c("input", {
-        attrs: {
-          "uxp-quiet": "true",
-          type: "text",
-          placeholder: "First setting"
-        }
-      })
-    ])
-  }
-]
+var staticRenderFns = []
 render._withStripped = true
 
 
@@ -10444,6 +10620,28 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
+/***/ "./src/helpers/colors.js":
+/*!*******************************!*\
+  !*** ./src/helpers/colors.js ***!
+  \*******************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+const getColorName = color => {
+    const { assetsColors } = __webpack_require__(/*! ../main */ "./src/main.js").getVueAppClass();
+    
+    let desiredColor = color.toHex(false); // false - means get 3 chars if possible
+    if (color.a < 255) {
+        desiredColor = `rgba(${desiredColor}, ${parseFloat(color.a / 255).toFixed(2)})`;
+    };
+
+    return assetsColors[desiredColor] || desiredColor;
+};
+
+exports.getColorName = getColorName;
+
+/***/ }),
+
 /***/ "./src/helpers/component-preview.js":
 /*!******************************************!*\
   !*** ./src/helpers/component-preview.js ***!
@@ -10538,8 +10736,32 @@ exports.createPreviewOfComponent = createPreviewOfComponent;
 const { standardizeString } = __webpack_require__(/*! ./standardize-string */ "./src/helpers/standardize-string.js");
 const { parseLayers } = __webpack_require__(/*! ./parse-layers */ "./src/helpers/parse-layers.js");
 
+const generateSCSS = (string, nodesArray, level, tabSize) => {
+    const indent = new Array(level + 1).join(' '.repeat(tabSize));
+    const indentStyles = new Array(level + 2).join(' '.repeat(tabSize));
+
+    nodesArray.forEach((object, i) => {
+        string += indent + '&' + object.classElementName + ' {\n';
+        for (let name in object.attributes.styles) {
+            const value = object.attributes.styles[name];
+            string += indentStyles + name + ': ' + value + ';\n';
+        }
+        string += indent + '}';
+
+        if (i !== nodesArray.length - 1) {
+            string += '\n\n';
+        }
+
+        if (object.childrens.length > 0) {
+            string = generateSCSS(string + '\n\n', object.childrens, level, tabSize);
+        }
+    });
+
+    return string;
+};
+
 // creating of html-tags
-const createElement = (tag, attributes, ...children) => {
+const createElement = (tag, attributes) => {
     const element = document.createElement(tag);
 
     if (attributes) {
@@ -10556,35 +10778,7 @@ const createElement = (tag, attributes, ...children) => {
         }
     }
 
-    // for (let child of children) {
-    //     element.appendChild(typeof child === 'object' ? child : document.createTextNode(child));
-    // }
-
     return element;
-};
-
-const generateSCSS = (string, nodesArray, level) => {
-    const indent = new Array(level + 1).join('    ');
-    const indentStyles = new Array(level + 2).join('    ');
-
-    nodesArray.forEach((object, i) => {
-        string += indent + '&' + object.classElementName + ' {\n';
-        for (let name in object.attributes.styles) {
-            const value = object.attributes.styles[name];
-            string += indentStyles + name + ': ' + value + ';\n';
-        }
-        string += indent + '}';
-
-        if (i !== nodesArray.length - 1) {
-            string += '\n\n';
-        }
-
-        if (object.childrens.length > 0) {
-            string = generateSCSS(string + '\n\n', object.childrens, level);
-        }
-    });
-
-    return string;
 };
 
 const generateHTML = (parent, nodesArray) => {
@@ -10600,16 +10794,16 @@ const generateHTML = (parent, nodesArray) => {
     return parent;
 };
 
-const formatHTML = (node, level) => {
-    const indentBefore = new Array(level++ + 1).join('    ');
-    const indentAfter = new Array(level - 1).join('    ');
+const formatHTML = (node, level, tabSize) => {
+    const indentBefore = new Array(level++ + 1).join(' '.repeat(tabSize));
+    const indentAfter = new Array(level - 1).join(' '.repeat(tabSize));
     let textNode;
 
     for (let i = 0; i < node.children.length; i++) {
         textNode = document.createTextNode('\n' + indentBefore);
         node.insertBefore(textNode, node.children[i]);
 
-        formatHTML(node.children[i], level);
+        formatHTML(node.children[i], level, tabSize);
 
         if (node.lastElementChild === node.children[i]) {
             textNode = document.createTextNode('\n' + indentAfter);
@@ -10620,14 +10814,14 @@ const formatHTML = (node, level) => {
     return node;
 };
 
-const generateVue = component => {
+const generateVue = (component, options) => {
     const name = standardizeString(component.name);
 
     // parsing the component to get html and scss
-    const domArray = parseLayers(component, [], name);
+    const domArray = parseLayers(component, [], name, options);
 
     // generate styles
-    const scss = generateSCSS('', domArray, 1);
+    const scss = generateSCSS('', domArray, 1, options.tabSize);
 
     // create the root element
     const root = generateHTML(document.createElement('div'), domArray);
@@ -10637,7 +10831,7 @@ const generateVue = component => {
     var div = document.createElement('div');
     div.innerHTML = root.outerHTML;
 
-    let html = `<template>${formatHTML(div, 1).innerHTML}</template>
+    let html = `<template>${formatHTML(div, 1, options.tabSize).innerHTML}</template>
 
 <script>
 export default {};
@@ -10668,36 +10862,37 @@ exports.generateVue = generateVue;
 const { 
     SymbolInstance, 
     Group, 
-    RepeatGrid, 
-    LinkedGraphic, 
-    Artboard, 
+    // RepeatGrid, 
+    // LinkedGraphic, 
+    // RootNode,
+    // Artboard, 
     Rectangle, 
-    Ellipse, 
-    Polygon, 
-    Line, 
-    Path, 
-    BooleanGroup, 
+    // Ellipse, 
+    // Polygon, 
+    // Line, 
+    // Path, 
+    // BooleanGroup, 
     Text
 } = __webpack_require__(/*! scenegraph */ "scenegraph");
 const { standardizeString } = __webpack_require__(/*! ./standardize-string */ "./src/helpers/standardize-string.js");
+const { getStylesForRectangle } = __webpack_require__(/*! ./parse-rectangle */ "./src/helpers/parse-rectangle.js");
+const { getStylesForText } = __webpack_require__(/*! ./parse-text */ "./src/helpers/parse-text.js");
+const { typografText } = __webpack_require__(/*! ../libs/typograf */ "./src/libs/typograf.js");
 
-const getColorName = color => {
-    const { assetsColors } = __webpack_require__(/*! ../main */ "./src/main.js").getVueAppClass();
-    
-    let desiredColor = color.toHex(false);
-    if (color.a < 255) {
-        desiredColor = `rgba(${desiredColor}, ${parseFloat(color.a / 255).toFixed(2)})`;
-    };
-
-    return assetsColors[desiredColor] || desiredColor;
-};
-
-const parseLayers = (xdNode, domArray, componentName) => {
+const parseLayers = (xdNode, domArray, componentName, { useTypograf }) => {
     xdNode.children.forEach(xdNode => {
-        const classElementName = '__' + standardizeString(xdNode.name);
+        let classElementName = '__';
+
+        // if layer has auto-generated string (e.g. "Rectangle 5" or text substring)
+        if (xdNode.hasDefaultName) {
+            classElementName += xdNode.guid.replace(/-/g, '');
+        } else {
+            classElementName += standardizeString(xdNode.name);
+        }
 
         const nodeObject = {
             tag: 'div',
+            isInnerComponent: false,
             attributes: {
                 class: componentName + classElementName,
                 styles: {},
@@ -10707,7 +10902,7 @@ const parseLayers = (xdNode, domArray, componentName) => {
             childrens: []
         };
 
-        let canPlace = false;
+        let canPlace = false; // can we add element to domArray? need for skip unknown type of node
 
         // simple group
         if (xdNode instanceof Group) {
@@ -10717,86 +10912,21 @@ const parseLayers = (xdNode, domArray, componentName) => {
 
         // insert the component in the component as a component <componentName />
         else if (xdNode instanceof SymbolInstance) {
-
+            canPlace = true;
+            nodeObject.tag = standardizeString(xdNode.name);
+            delete nodeObject.attributes.class;
         }
-
-        else if (xdNode instanceof RepeatGrid) {
-
-        }
-
-        else if (xdNode instanceof LinkedGraphic) {
-
-        }
-
-        // else if (node instanceof RootNode) {
-
-        // }
-
-        // GraphicNode
-        // else if (node instanceof Artboard) {
-
-        // }
 
         else if (xdNode instanceof Rectangle) {
             canPlace = true;
-            nodeObject.attributes.styles = {
-                'width': xdNode.width + 'px',
-                'border': xdNode.strokeWidth + 'px solid ' + getColorName(xdNode.stroke),
-                'border-radius': xdNode.hasRoundedCorners ? xdNode.cornerRadii.topLeft + 'px' : '',
-                'background': getColorName(xdNode.fill)
-            };
+            nodeObject.attributes.styles = getStylesForRectangle(xdNode);
         }
-
-        // else if (node instanceof Ellipse) {
-
-        // }
-
-        // else if (node instanceof Polygon) {
-
-        // }
-
-        else if (xdNode instanceof Line) {
-
-        }
-
-        // else if (node instanceof Path) {
-
-        // }
-
-        // else if (node instanceof BooleanGroup) {
-
-        // }
 
         else if (xdNode instanceof Text) {
             canPlace = true;
-            nodeObject.attributes.html = xdNode.text;
-            if (xdNode.areaBox) {
-                nodeObject.attributes.styles['width'] = xdNode.areaBox.width + 'px';
-            }
-            nodeObject.attributes.styles['font-family'] = xdNode.fontFamily;
-            nodeObject.attributes.styles['font-size'] = xdNode.fontSize + 'px';
-            if (xdNode.lineSpacing !== 0) {
-                nodeObject.attributes.styles['line-height'] = '(' + xdNode.lineSpacing + ' / ' + xdNode.fontSize + ')';
-            }
-            // nodeObject.attributes.styles['font-weight'] = xdNode.fontStyle,
-            nodeObject.attributes.styles['font-style'] = xdNode.fontStyle; // here you need to parse the words 'Regular' Narrow Italic etc.
-            if (xdNode.charSpacing !== 0) {
-                nodeObject.attributes.styles['letter-spacing'] = xdNode.charSpacing + 'em';
-            }
-            if (xdNode.underline) {
-                nodeObject.attributes.styles['text-decoration'] = 'underline';
-            }
-            if (xdNode.textTransform !== 'none') {
-                nodeObject.attributes.styles['text-transform'] = xdNode.textTransform;
-            }
-            if (xdNode.textAlign !== 'ALIGN_LEFT') {
-                if (xdNode.textAlign === 'ALIGN_CENTER') {
-                    nodeObject.attributes.styles['text-align'] = 'center';
-                } else if (xdNode.textAlign === 'ALIGN_RIGHT') {
-                    nodeObject.attributes.styles['text-align'] = 'right';
-                }
-            }
-            nodeObject.attributes.styles['color'] = getColorName(xdNode.fill);
+            nodeObject.attributes.html = useTypograf ? typografText(xdNode.text) : xdNode.text.replace(/\r?\n|\r/g, '<br>');
+            console.log(123, useTypograf, nodeObject.attributes.html);
+            nodeObject.attributes.styles = getStylesForText(xdNode);
         }
 
         if (canPlace) {
@@ -10808,6 +10938,134 @@ const parseLayers = (xdNode, domArray, componentName) => {
 };
 
 exports.parseLayers = parseLayers;
+
+
+/***/ }),
+
+/***/ "./src/helpers/parse-rectangle.js":
+/*!****************************************!*\
+  !*** ./src/helpers/parse-rectangle.js ***!
+  \****************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+const { getColorName } = __webpack_require__(/*! ./colors */ "./src/helpers/colors.js");
+
+const getStylesForRectangle = rectangleNode => {
+    const result = {};
+
+    result['width'] = rectangleNode.width + 'px';
+
+    if (rectangleNode.strokeEnabled) {
+        result['border'] = rectangleNode.strokeWidth + 'px solid ' + getColorName(rectangleNode.stroke);
+    }
+
+    if (rectangleNode.hasRoundedCorners) {
+        const { topLeft, topRight, bottomRight, bottomLeft } = rectangleNode.cornerRadii;
+        if (topLeft === topRight && topLeft === bottomRight && topLeft === bottomLeft) {
+            result['border-radius'] = topLeft + 'px';
+        } else {
+            result['border-radius'] = '';
+            result['border-radius'] += topLeft === 0 ? '0 ' : topLeft + 'px ';
+            result['border-radius'] += topRight === 0 ? '0 ' : topRight + 'px ';
+            result['border-radius'] += bottomRight === 0 ? '0 ' : bottomRight + 'px ';
+            result['border-radius'] += bottomLeft === 0 ? '0' : bottomLeft + 'px';
+        }
+    }
+
+    if (rectangleNode.fillEnabled) {
+        result['background'] = getColorName(rectangleNode.fill);
+    }
+
+    return result;
+};
+
+exports.getStylesForRectangle = getStylesForRectangle;
+
+
+/***/ }),
+
+/***/ "./src/helpers/parse-text.js":
+/*!***********************************!*\
+  !*** ./src/helpers/parse-text.js ***!
+  \***********************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+const { getColorName } = __webpack_require__(/*! ./colors */ "./src/helpers/colors.js");
+
+const getStylesForText = textNode => {
+    const result = {};
+
+    if (textNode.areaBox) {
+        result['width'] = textNode.areaBox.width + 'px';
+    }
+
+    result['font-family'] = textNode.fontFamily;
+
+    result['font-size'] = textNode.fontSize + 'px';
+
+    if (textNode.lineSpacing !== 0) {
+        result['line-height'] = '(' + textNode.lineSpacing + ' / ' + textNode.fontSize + ')';
+    }
+
+    const fontStyle = textNode.fontStyle.toLowerCase();
+
+    // https://developer.mozilla.org/ru/docs/Web/CSS/font-weight
+    const weights = {
+        100: ['hairline', 'thin'],
+        200: ['extra light', 'extralight', 'ultra light', 'ultralight'],
+        300: ['light'],
+        400: ['normal', 'regular', 'book'],
+        500: ['medium'],
+        600: ['semi bold', 'semibold', 'semi', 'demi bold', 'demibold', 'demi'],
+        700: ['bold'],
+        800: ['extra bold', 'extrabold', 'ultra bold', 'ultrabold'],
+        900: ['heavy', 'black'],
+    };
+
+    let tempWeight = 0;
+    for (const key in weights) {
+        if (weights[key].some(word => fontStyle.includes(word))) {
+            tempWeight = key;
+            break;
+        }
+    }
+
+    if (tempWeight > 0 && tempWeight !== '400') {
+        result['font-weight'] = tempWeight;
+    }
+
+    if (fontStyle.includes('italic') || fontStyle.includes('oblique')) {
+        result['font-style'] = 'italic';
+    }
+
+    if (textNode.charSpacing !== 0) {
+        result['letter-spacing'] = textNode.charSpacing / 1000 + 'em';
+    }
+
+    if (textNode.underline) {
+        result['text-decoration'] = 'underline';
+    }
+
+    if (textNode.textTransform !== 'none') {
+        result['text-transform'] = textNode.textTransform;
+    }
+
+    if (textNode.textAlign !== 'ALIGN_LEFT') {
+        if (textNode.textAlign === 'ALIGN_CENTER') {
+            result['text-align'] = 'center';
+        } else if (textNode.textAlign === 'ALIGN_RIGHT') {
+            result['text-align'] = 'right';
+        }
+    }
+
+    result['color'] = getColorName(textNode.fill);
+
+    return result;
+};
+
+exports.getStylesForText = getStylesForText;
 
 
 /***/ }),
@@ -10842,11 +11100,115 @@ exports.saveComponentAsFile = saveComponentAsFile;
 /***/ (function(module, exports) {
 
 const standardizeString = string => {
-    return string.toLowerCase().replace(/\ /g, '-');
+    return string.toLowerCase().replace(/\ /g, '-').replace(/\r?\n|\r/g, '');
 };
 
 exports.standardizeString = standardizeString;
 
+
+/***/ }),
+
+/***/ "./src/libs/typograf.js":
+/*!******************************!*\
+  !*** ./src/libs/typograf.js ***!
+  \******************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+// https://github.com/Spearance/jQuery.Typograf.js
+
+const options = {
+    leftQuote: "«",
+    rightQuote: "»",
+    handler: "",
+    restor: ""
+};
+
+const typografText = text => {
+    return text
+        // Minus
+        .replace(/\u0020-(\d)/g, "\u0020−$1")
+
+        // Dash
+        .replace(/(^|\n|\s|>)\-(\s)/g, "$1—$2")
+
+        // Double hyphen
+        .replace(/\-{2} /g, "— ")
+
+        // Multiple nbsp
+        .replace(/\u00a0{2,}|\u00a0\u0020|\u0020\u00a0/g, "\u00a0")
+
+        // HTML-comment
+        .replace(/<!—/ig, function(){
+            caretPosition++;
+            return "<!--";
+        })
+
+        // Numerical interval
+        .replace(/(\d)(\u0020)?[-—](\u0020)?(\d)/g, function(str, $1, $2, $3, $4){
+            // if ($2 == "\u0020") { caretPosition-- }
+            // if ($3 == "\u0020") { caretPosition-- }
+            return $1 + "–" + $4;
+        })
+
+        // Copyright
+        .replace(/\([cс]\)/ig, "©")
+
+        // Registered trademark
+        .replace(/\(r\)/ig, "®")
+
+        // Trademark
+        .replace(/\(tm\)/ig, "™")
+
+        // Rouble
+        .replace(/\([рp]\)/ig, "₽")
+
+        // Three dots
+        .replace(/\.{3}/g, "…")
+
+        // Sizes
+        .replace(/(\d)[xх](\d)/ig, "$1×$2")
+
+        // Open quote
+        .replace(/\"([a-z0-9\u0410-\u042f\u0401…])/ig, options.leftQuote + "$1")
+
+        // Close quote
+        .replace(/([a-z0-9\u0410-\u042f\u0401…?!])\"/ig, "$1" + options.rightQuote)
+
+        // Open quote
+        .replace(new RegExp("\"(" + options.leftQuote + "[a-z0-9\u0410-\u042f\u0401…])", "ig"), options.leftQuote + "$1")
+
+        // Close quote
+        .replace(new RegExp("([a-z0-9\u0410-\u042f\u0401…?!]" + options.rightQuote + ")\"", "ig"), "$1" + options.rightQuote)
+
+        // Fix HTML open quotes
+        .replace(new RegExp("([-a-z0-9]+=)" +
+                            "["   + options.leftQuote + options.rightQuote + "]" +
+                            "([^" + options.leftQuote + options.rightQuote + "]*?)", "ig"),
+                 "$1\"$2")
+
+        // Fix HTML close quotes
+        .replace(new RegExp("([-a-z0-9]+=)[\"]" +
+                            "([^>" + options.leftQuote + options.rightQuote + "]*?)" +
+                            "["   + options.leftQuote + options.rightQuote + "]", "ig"),
+                 "$1\"$2\"")
+                 
+        // Degree
+        .replace(new RegExp("([0-6]?[0-9])[\'\′]([0-6]?[0-9])?(\\d+)" +
+                            "[" + options.rightQuote + "\"]", "g"), 
+                 "$1\′$2$3\″")
+        
+        // Prepositions
+        .replace(new RegExp("((?:^|\n|\t|[\u00a0\u0020]|>)[A-Z\u0410-\u042f\u0401]{1,2})\u0020", "ig"), 
+                 "$1\u00a0")
+
+        .replace(/\-(то|ка)\u00a0/gi, "-$1\u0020")
+
+        .replace(new RegExp("(?:\s|\t|[\u00a0\u0020])(же?|л[иь]|бы?|ка)([.,!?:;])?\u00a0", "ig"), 
+                 "\u00a0$1$2\u0020");
+};
+
+exports.typografText = typografText;
 
 /***/ }),
 
@@ -10893,6 +11255,9 @@ const getDialog = (selection, documentRoot) => {
                 });
             }
         });
+    } else {
+        // just update UI dialog state and data
+        appVue.$children[0].loadUI();
     }
 
     return dialog;

@@ -23,27 +23,48 @@ form {
 .components {
     display: flex;
     flex-wrap: wrap;
+    justify-content: space-between;
 }
 
 .components__left {
-    flex: 1 0 40%;
+    flex: 1 0 22%;
 }
 
-.components__left-preview {
+.components__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0 0 4px 8px;
+}
+
+.components__row input[type=number] {
+    width: 50px;
+}
+
+.components__row--mr8 {
+    margin-right: 8px;
+}
+
+.components__center {
+    flex: 1 0 33%;
+    padding: 0 0 0 2%;
+}
+
+.components__center-preview {
     padding: 10px;
     background: #fff;
     margin: 0 8px;
 }
 
-.components__left-preview img {
+.components__center-preview img {
     display: block;
     width: 100%;
-    height: 200px;
+    height: 260px;
     object-fit: contain;
 }
 
 .components__right {
-    flex: 1 0 60%;
+    flex: 1 0 45%;
 }
 
 .components__right textarea {

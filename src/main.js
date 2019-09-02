@@ -34,6 +34,9 @@ const getDialog = (selection, documentRoot) => {
                 });
             }
         });
+    } else {
+        // just update UI dialog state and data
+        appVue.$children[0].loadUI();
     }
 
     return dialog;
