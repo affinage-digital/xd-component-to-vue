@@ -55,7 +55,7 @@ const base64ArrayBuffer = arrayBuffer => {
 
 const createPreviewOfComponent = node => {
     return localFileSystem.getTemporaryFolder().then(tempFolder => {
-        return tempFolder.createFile('component-to-vue-preview-temp-file.png', { overwrite: true }).then(tempFile => { // node.guid + '.png'
+        return tempFolder.createFile('component-to-vue-preview-temp-file.png', { overwrite: true }).then(tempFile => {
             return application.createRenditions([{
                 node,
                 outputFile: tempFile,

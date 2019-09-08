@@ -1,28 +1,32 @@
 const { standardizeString } = require('./standardize-string');
 const { parseLayers } = require('./parse-layers');
 
-const generateSCSS = (string, nodesArray, level, tabSize) => {
+const generateSCSS = (nodesArray, level, tabSize) => {
     const indent = new Array(level + 1).join(' '.repeat(tabSize));
     const indentStyles = new Array(level + 2).join(' '.repeat(tabSize));
 
+    const array = [];
+
     nodesArray.forEach((object, i) => {
-        string += indent + '&' + object.classElementName + ' {\n';
-        for (let name in object.attributes.styles) {
-            const value = object.attributes.styles[name];
-            string += indentStyles + name + ': ' + value + ';\n';
-        }
-        string += indent + '}';
+        const hasClass = !!object.attributes.class;
 
-        if (i !== nodesArray.length - 1) {
-            string += '\n\n';
-        }
+        if (hasClass) { // do not process nested components
+            let string = indent + '&' + object.classElementName + ' {\n';
+            for (let name in object.attributes.styles) {
+                const value = object.attributes.styles[name];
+                string += indentStyles + name + ': ' + value + ';\n';
+            }
+            string += indent + '}';
 
-        if (object.childrens.length > 0) {
-            string = generateSCSS(string + '\n\n', object.childrens, level, tabSize);
+            array.push(string);
+            
+            if (object.childrens.length > 0) {
+                array.push(...generateSCSS(object.childrens, level, tabSize));
+            }
         }
     });
 
-    return string;
+    return array;
 };
 
 // creating of html-tags
@@ -86,7 +90,7 @@ const generateVue = (component, options) => {
     const domArray = parseLayers(component, [], name, options);
 
     // generate styles
-    const scss = generateSCSS('', domArray, 1, options.tabSize);
+    const scss = generateSCSS(domArray, 1, options.tabSize).join('\n\n');
 
     // create the root element
     const root = generateHTML(document.createElement('div'), domArray);

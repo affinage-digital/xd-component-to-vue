@@ -16,9 +16,10 @@ const {
 const { standardizeString } = require('./standardize-string');
 const { getStylesForRectangle } = require('./parse-rectangle');
 const { getStylesForText } = require('./parse-text');
+const { parseSVG } = require('./parse-svg');
 const { typografText } = require('../libs/typograf');
 
-const parseLayers = (xdNode, domArray, componentName, { useTypograf }) => {
+const parseLayers = (xdNode, domArray, componentName, options) => {
     xdNode.children.forEach(xdNode => {
         let classElementName = '__';
 
@@ -31,7 +32,6 @@ const parseLayers = (xdNode, domArray, componentName, { useTypograf }) => {
 
         const nodeObject = {
             tag: 'div',
-            isInnerComponent: false,
             attributes: {
                 class: componentName + classElementName,
                 styles: {},
@@ -46,7 +46,25 @@ const parseLayers = (xdNode, domArray, componentName, { useTypograf }) => {
         // simple group
         if (xdNode instanceof Group) {
             canPlace = true;
-            nodeObject.childrens = parseLayers(xdNode, nodeObject.childrens, componentName);
+
+            // export svg as inline-svg
+            if (classElementName.indexOf('__svg') === 0) {                
+                console.log(120);
+                // nodeObject.attributes.html = '<svg>123</svg>'
+                // parseSVG(xdNode).then(string => {
+                    
+                //     nodeObject.attributes.html = string;
+                //     console.log(122);
+                // });
+
+                const html = (async () => {
+                    console.log(121);
+                    return await parseSVG(xdNode);
+                })();
+                console.log(123, html);
+            } else {
+                nodeObject.childrens = parseLayers(xdNode, nodeObject.childrens, componentName);
+            }
         }
 
         // insert the component in the component as a component <componentName />
@@ -63,8 +81,7 @@ const parseLayers = (xdNode, domArray, componentName, { useTypograf }) => {
 
         else if (xdNode instanceof Text) {
             canPlace = true;
-            nodeObject.attributes.html = useTypograf ? typografText(xdNode.text) : xdNode.text.replace(/\r?\n|\r/g, '<br>');
-            console.log(123, useTypograf, nodeObject.attributes.html);
+            nodeObject.attributes.html = options.useTypograf ? typografText(xdNode.text) : xdNode.text.replace(/\r?\n|\r/g, '<br>');
             nodeObject.attributes.styles = getStylesForText(xdNode);
         }
 

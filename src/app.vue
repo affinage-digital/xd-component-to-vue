@@ -20,7 +20,7 @@
 
                 <div class="components__row">
                     <label for="option-only-master">Only Master components</label>
-                    <input id="option-only-master" type="checkbox" v-model="options.onlyMasterComponent" @change="changeComponent" />
+                    <input id="option-only-master" type="checkbox" v-model="options.onlyMasterComponent" @change="changeOnlyMastersComponent" />
                 </div>
 
                 <div class="components__row components__row--mr8">
@@ -109,6 +109,7 @@ const {
 const { generateVue } = require('./helpers/generate-vue');
 const { saveComponentAsFile } = require('./helpers/save-file');
 const { createPreviewOfComponent } = require('./helpers/component-preview');
+const { getFontParameters } = require('./helpers/fonts');
 
 module.exports = {
     props: {
@@ -205,7 +206,29 @@ module.exports = {
 
         typographyVariables: {
             get() {
-                let result = '';
+                let result = `@mixin fontface($family, $localname, $localname2, $filename, $weight, $style) {
+    @font-face {
+        font-display: swap;
+        font-family: $family;
+        src: local('#{$localname}'),
+            local('#{$localname2}'),
+            url('/assets/fonts/#{$filename}.woff2') format('woff2'),
+            url('/assets/fonts/#{$filename}.woff') format('woff');
+        font-weight: $weight;
+        font-style: $style;
+    }
+}\n\n`;
+
+                this.assetsTypography.forEach(({ style }) => {
+                    const { fontWeight, fontStyle } = getFontParameters(style.fontStyle.toLowerCase());
+
+                    const family = style.fontFamily;
+                    const localname = `${ style.fontFamily } ${ style.fontStyle }`;
+                    const localname2 = `${ style.fontFamily }-${ style.fontStyle }`.replace(/\ /g, '');
+                    const filename = `${ style.fontFamily + style.fontStyle }`.replace(/\ /g, '');
+
+                    result += `@include fontface(${ family }, ${ localname }, ${ localname2 }, ${ filename }, ${ fontWeight }, ${ fontStyle });\n`
+                });
 
                 return result;
             },
@@ -273,6 +296,12 @@ module.exports = {
                     this.$set(this.assetsColors, cssColor, name);
                 }
             });
+        },
+
+        changeOnlyMastersComponent() {
+            setTimeout(() => {
+                this.changeComponent();
+            }, 33);
         },
 
         changeComponent() {

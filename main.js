@@ -1308,6 +1308,7 @@ const {
 const { generateVue } = __webpack_require__(/*! ./helpers/generate-vue */ "./src/helpers/generate-vue.js");
 const { saveComponentAsFile } = __webpack_require__(/*! ./helpers/save-file */ "./src/helpers/save-file.js");
 const { createPreviewOfComponent } = __webpack_require__(/*! ./helpers/component-preview */ "./src/helpers/component-preview.js");
+const { getFontParameters } = __webpack_require__(/*! ./helpers/fonts */ "./src/helpers/fonts.js");
 
 module.exports = {
     props: {
@@ -1404,7 +1405,29 @@ module.exports = {
 
         typographyVariables: {
             get() {
-                let result = '';
+                let result = `@mixin fontface($family, $localname, $localname2, $filename, $weight, $style) {
+    @font-face {
+        font-display: swap;
+        font-family: $family;
+        src: local('#{$localname}'),
+            local('#{$localname2}'),
+            url('/assets/fonts/#{$filename}.woff2') format('woff2'),
+            url('/assets/fonts/#{$filename}.woff') format('woff');
+        font-weight: $weight;
+        font-style: $style;
+    }
+}\n\n`;
+
+                this.assetsTypography.forEach(({ style }) => {
+                    const { fontWeight, fontStyle } = getFontParameters(style.fontStyle.toLowerCase());
+
+                    const family = style.fontFamily;
+                    const localname = `${ style.fontFamily } ${ style.fontStyle }`;
+                    const localname2 = `${ style.fontFamily }-${ style.fontStyle }`.replace(/\ /g, '');
+                    const filename = `${ style.fontFamily + style.fontStyle }`.replace(/\ /g, '');
+
+                    result += `@include fontface(${ family }, ${ localname }, ${ localname2 }, ${ filename }, ${ fontWeight }, ${ fontStyle });\n`
+                });
 
                 return result;
             },
@@ -1472,6 +1495,12 @@ module.exports = {
                     this.$set(this.assetsColors, cssColor, name);
                 }
             });
+        },
+
+        changeOnlyMastersComponent() {
+            setTimeout(() => {
+                this.changeComponent();
+            }, 33);
         },
 
         changeComponent() {
@@ -1678,7 +1707,7 @@ var render = function() {
                       _vm.$set(_vm.options, "onlyMasterComponent", $$c)
                     }
                   },
-                  _vm.changeComponent
+                  _vm.changeOnlyMastersComponent
                 ]
               }
             })
@@ -10706,7 +10735,7 @@ const base64ArrayBuffer = arrayBuffer => {
 
 const createPreviewOfComponent = node => {
     return localFileSystem.getTemporaryFolder().then(tempFolder => {
-        return tempFolder.createFile('component-to-vue-preview-temp-file.png', { overwrite: true }).then(tempFile => { // node.guid + '.png'
+        return tempFolder.createFile('component-to-vue-preview-temp-file.png', { overwrite: true }).then(tempFile => {
             return application.createRenditions([{
                 node,
                 outputFile: tempFile,
@@ -10726,6 +10755,51 @@ exports.createPreviewOfComponent = createPreviewOfComponent;
 
 /***/ }),
 
+/***/ "./src/helpers/fonts.js":
+/*!******************************!*\
+  !*** ./src/helpers/fonts.js ***!
+  \******************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+// https://developer.mozilla.org/ru/docs/Web/CSS/font-weight
+const weights = {
+    100: ['hairline', 'thin'],
+    200: ['extra light', 'extralight', 'ultra light', 'ultralight'],
+    300: ['light'],
+    400: ['normal', 'regular', 'book'],
+    500: ['medium'],
+    600: ['semi bold', 'semibold', 'semi', 'demi bold', 'demibold', 'demi'],
+    700: ['bold'],
+    800: ['extra bold', 'extrabold', 'ultra bold', 'ultrabold'],
+    900: ['heavy', 'black'],
+};
+
+const getFontParameters = fontStyle => {
+    let tempWeight = 400;
+    let tempStyle = 'normal';
+
+    for (const key in weights) {
+        if (weights[key].some(word => fontStyle.includes(word))) {
+            tempWeight = key;
+            break;
+        }
+    }
+
+    if (fontStyle.includes('italic') || fontStyle.includes('oblique')) {
+        tempStyle = 'italic';
+    }
+
+    return {
+        fontWeight: tempWeight,
+        fontStyle: tempStyle
+    };
+};
+
+exports.getFontParameters = getFontParameters;
+
+/***/ }),
+
 /***/ "./src/helpers/generate-vue.js":
 /*!*************************************!*\
   !*** ./src/helpers/generate-vue.js ***!
@@ -10736,28 +10810,32 @@ exports.createPreviewOfComponent = createPreviewOfComponent;
 const { standardizeString } = __webpack_require__(/*! ./standardize-string */ "./src/helpers/standardize-string.js");
 const { parseLayers } = __webpack_require__(/*! ./parse-layers */ "./src/helpers/parse-layers.js");
 
-const generateSCSS = (string, nodesArray, level, tabSize) => {
+const generateSCSS = (nodesArray, level, tabSize) => {
     const indent = new Array(level + 1).join(' '.repeat(tabSize));
     const indentStyles = new Array(level + 2).join(' '.repeat(tabSize));
 
+    const array = [];
+
     nodesArray.forEach((object, i) => {
-        string += indent + '&' + object.classElementName + ' {\n';
-        for (let name in object.attributes.styles) {
-            const value = object.attributes.styles[name];
-            string += indentStyles + name + ': ' + value + ';\n';
-        }
-        string += indent + '}';
+        const hasClass = !!object.attributes.class;
 
-        if (i !== nodesArray.length - 1) {
-            string += '\n\n';
-        }
+        if (hasClass) { // do not process nested components
+            let string = indent + '&' + object.classElementName + ' {\n';
+            for (let name in object.attributes.styles) {
+                const value = object.attributes.styles[name];
+                string += indentStyles + name + ': ' + value + ';\n';
+            }
+            string += indent + '}';
 
-        if (object.childrens.length > 0) {
-            string = generateSCSS(string + '\n\n', object.childrens, level, tabSize);
+            array.push(string);
+            
+            if (object.childrens.length > 0) {
+                array.push(...generateSCSS(object.childrens, level, tabSize));
+            }
         }
     });
 
-    return string;
+    return array;
 };
 
 // creating of html-tags
@@ -10821,7 +10899,7 @@ const generateVue = (component, options) => {
     const domArray = parseLayers(component, [], name, options);
 
     // generate styles
-    const scss = generateSCSS('', domArray, 1, options.tabSize);
+    const scss = generateSCSS(domArray, 1, options.tabSize).join('\n\n');
 
     // create the root element
     const root = generateHTML(document.createElement('div'), domArray);
@@ -10877,9 +10955,10 @@ const {
 const { standardizeString } = __webpack_require__(/*! ./standardize-string */ "./src/helpers/standardize-string.js");
 const { getStylesForRectangle } = __webpack_require__(/*! ./parse-rectangle */ "./src/helpers/parse-rectangle.js");
 const { getStylesForText } = __webpack_require__(/*! ./parse-text */ "./src/helpers/parse-text.js");
+const { parseSVG } = __webpack_require__(/*! ./parse-svg */ "./src/helpers/parse-svg.js");
 const { typografText } = __webpack_require__(/*! ../libs/typograf */ "./src/libs/typograf.js");
 
-const parseLayers = (xdNode, domArray, componentName, { useTypograf }) => {
+const parseLayers = (xdNode, domArray, componentName, options) => {
     xdNode.children.forEach(xdNode => {
         let classElementName = '__';
 
@@ -10892,7 +10971,6 @@ const parseLayers = (xdNode, domArray, componentName, { useTypograf }) => {
 
         const nodeObject = {
             tag: 'div',
-            isInnerComponent: false,
             attributes: {
                 class: componentName + classElementName,
                 styles: {},
@@ -10907,7 +10985,25 @@ const parseLayers = (xdNode, domArray, componentName, { useTypograf }) => {
         // simple group
         if (xdNode instanceof Group) {
             canPlace = true;
-            nodeObject.childrens = parseLayers(xdNode, nodeObject.childrens, componentName);
+
+            // export svg as inline-svg
+            if (classElementName.indexOf('__svg') === 0) {                
+                console.log(120);
+                // nodeObject.attributes.html = '<svg>123</svg>'
+                // parseSVG(xdNode).then(string => {
+                    
+                //     nodeObject.attributes.html = string;
+                //     console.log(122);
+                // });
+
+                const html = (async () => {
+                    console.log(121);
+                    return await parseSVG(xdNode);
+                })();
+                console.log(123, html);
+            } else {
+                nodeObject.childrens = parseLayers(xdNode, nodeObject.childrens, componentName);
+            }
         }
 
         // insert the component in the component as a component <componentName />
@@ -10924,8 +11020,7 @@ const parseLayers = (xdNode, domArray, componentName, { useTypograf }) => {
 
         else if (xdNode instanceof Text) {
             canPlace = true;
-            nodeObject.attributes.html = useTypograf ? typografText(xdNode.text) : xdNode.text.replace(/\r?\n|\r/g, '<br>');
-            console.log(123, useTypograf, nodeObject.attributes.html);
+            nodeObject.attributes.html = options.useTypograf ? typografText(xdNode.text) : xdNode.text.replace(/\r?\n|\r/g, '<br>');
             nodeObject.attributes.styles = getStylesForText(xdNode);
         }
 
@@ -10985,6 +11080,41 @@ exports.getStylesForRectangle = getStylesForRectangle;
 
 /***/ }),
 
+/***/ "./src/helpers/parse-svg.js":
+/*!**********************************!*\
+  !*** ./src/helpers/parse-svg.js ***!
+  \**********************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+const application = __webpack_require__(/*! application */ "application");
+const { localFileSystem, formats } = __webpack_require__(/*! uxp */ "uxp").storage;
+
+const parseSVG = node => {
+    return localFileSystem.getTemporaryFolder().then(tempFolder => {
+        return tempFolder.createFile('export-svg-temp-file.svg', { overwrite: true }).then(tempFile => {
+            return application.createRenditions([{
+                node,
+                outputFile: tempFile,
+                type: 'svg',
+                scale: 1,
+                minify: false,
+                embedImages: true,
+            }]).then(results => {
+                return results[0].outputFile.read({ format: formats.utf8 }).then(string => {
+                    console.log(122);
+                    return string;
+                });
+            });
+        });
+    });
+};
+
+exports.parseSVG = parseSVG;
+
+
+/***/ }),
+
 /***/ "./src/helpers/parse-text.js":
 /*!***********************************!*\
   !*** ./src/helpers/parse-text.js ***!
@@ -10993,6 +11123,7 @@ exports.getStylesForRectangle = getStylesForRectangle;
 /***/ (function(module, exports, __webpack_require__) {
 
 const { getColorName } = __webpack_require__(/*! ./colors */ "./src/helpers/colors.js");
+const { getFontParameters } = __webpack_require__(/*! ./fonts */ "./src/helpers/fonts.js");
 
 const getStylesForText = textNode => {
     const result = {};
@@ -11009,35 +11140,14 @@ const getStylesForText = textNode => {
         result['line-height'] = '(' + textNode.lineSpacing + ' / ' + textNode.fontSize + ')';
     }
 
-    const fontStyle = textNode.fontStyle.toLowerCase();
+    const { fontWeight, fontStyle } = getFontParameters(textNode.fontStyle.toLowerCase());
 
-    // https://developer.mozilla.org/ru/docs/Web/CSS/font-weight
-    const weights = {
-        100: ['hairline', 'thin'],
-        200: ['extra light', 'extralight', 'ultra light', 'ultralight'],
-        300: ['light'],
-        400: ['normal', 'regular', 'book'],
-        500: ['medium'],
-        600: ['semi bold', 'semibold', 'semi', 'demi bold', 'demibold', 'demi'],
-        700: ['bold'],
-        800: ['extra bold', 'extrabold', 'ultra bold', 'ultrabold'],
-        900: ['heavy', 'black'],
-    };
-
-    let tempWeight = 0;
-    for (const key in weights) {
-        if (weights[key].some(word => fontStyle.includes(word))) {
-            tempWeight = key;
-            break;
-        }
+    if (fontWeight !== '400') {
+        result['font-weight'] = fontWeight;
     }
 
-    if (tempWeight > 0 && tempWeight !== '400') {
-        result['font-weight'] = tempWeight;
-    }
-
-    if (fontStyle.includes('italic') || fontStyle.includes('oblique')) {
-        result['font-style'] = 'italic';
+    if (fontStyle !== 'normal') {
+        result['font-style'] = fontStyle;
     }
 
     if (textNode.charSpacing !== 0) {

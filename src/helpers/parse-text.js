@@ -1,4 +1,5 @@
 const { getColorName } = require('./colors');
+const { getFontParameters } = require('./fonts');
 
 const getStylesForText = textNode => {
     const result = {};
@@ -15,35 +16,14 @@ const getStylesForText = textNode => {
         result['line-height'] = '(' + textNode.lineSpacing + ' / ' + textNode.fontSize + ')';
     }
 
-    const fontStyle = textNode.fontStyle.toLowerCase();
+    const { fontWeight, fontStyle } = getFontParameters(textNode.fontStyle.toLowerCase());
 
-    // https://developer.mozilla.org/ru/docs/Web/CSS/font-weight
-    const weights = {
-        100: ['hairline', 'thin'],
-        200: ['extra light', 'extralight', 'ultra light', 'ultralight'],
-        300: ['light'],
-        400: ['normal', 'regular', 'book'],
-        500: ['medium'],
-        600: ['semi bold', 'semibold', 'semi', 'demi bold', 'demibold', 'demi'],
-        700: ['bold'],
-        800: ['extra bold', 'extrabold', 'ultra bold', 'ultrabold'],
-        900: ['heavy', 'black'],
-    };
-
-    let tempWeight = 0;
-    for (const key in weights) {
-        if (weights[key].some(word => fontStyle.includes(word))) {
-            tempWeight = key;
-            break;
-        }
+    if (fontWeight !== '400') {
+        result['font-weight'] = fontWeight;
     }
 
-    if (tempWeight > 0 && tempWeight !== '400') {
-        result['font-weight'] = tempWeight;
-    }
-
-    if (fontStyle.includes('italic') || fontStyle.includes('oblique')) {
-        result['font-style'] = 'italic';
+    if (fontStyle !== 'normal') {
+        result['font-style'] = fontStyle;
     }
 
     if (textNode.charSpacing !== 0) {
