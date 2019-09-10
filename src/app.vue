@@ -318,9 +318,11 @@ module.exports = {
             }
 
             if (this.currentComponent.node) {
-                const { html } = generateVue(this.currentComponent.node, this.options);
                 this.currentComponent.name = this.currentComponent.node.name + (this.currentComponent.node.isMaster ? ' (master)' : '');
-                this.currentComponent.html = html;
+
+                generateVue(this.currentComponent.node, this.options).then(html => {
+                    this.currentComponent.html = html;
+                });
 
                 createPreviewOfComponent(this.currentComponent.node).then(base64string => {
                     this.currentComponent.preview = base64string;

@@ -20,6 +20,8 @@ const { parseSVG } = require('./parse-svg');
 const { typografText } = require('../libs/typograf');
 
 const parseLayers = (xdNode, domArray, componentName, options) => {
+    const arrayOfPromises = [];
+
     xdNode.children.forEach(xdNode => {
         let classElementName = '__';
 
@@ -47,24 +49,20 @@ const parseLayers = (xdNode, domArray, componentName, options) => {
         if (xdNode instanceof Group) {
             canPlace = true;
 
-            // export svg as inline-svg
-            if (classElementName.indexOf('__svg') === 0) {                
-                console.log(120);
-                // nodeObject.attributes.html = '<svg>123</svg>'
-                // parseSVG(xdNode).then(string => {
-                    
-                //     nodeObject.attributes.html = string;
-                //     console.log(122);
-                // });
+            let promise;
 
-                const html = (async () => {
-                    console.log(121);
-                    return await parseSVG(xdNode);
-                })();
-                console.log(123, html);
+            // export svg as inline-svg
+            if (classElementName.indexOf('__svg') === 0) {
+                promise = parseSVG(xdNode).then(html => {
+                    nodeObject.attributes.html = html;
+                });
             } else {
-                nodeObject.childrens = parseLayers(xdNode, nodeObject.childrens, componentName);
+                promise = parseLayers(xdNode, nodeObject.childrens, componentName).then(domArray2 => {
+                    nodeObject.childrens = domArray2;
+                });
             }
+
+            arrayOfPromises.push(promise);
         }
 
         // insert the component in the component as a component <componentName />
@@ -90,7 +88,9 @@ const parseLayers = (xdNode, domArray, componentName, options) => {
         }
     });
 
-    return domArray;
+    return Promise.all(arrayOfPromises).then(() => {
+        return domArray;
+    });
 };
 
 exports.parseLayers = parseLayers;

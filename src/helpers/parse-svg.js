@@ -1,5 +1,6 @@
 const application = require('application');
 const { localFileSystem, formats } = require('uxp').storage;
+const { svgo } = require('../libs/svgo');
 
 const parseSVG = node => {
     return localFileSystem.getTemporaryFolder().then(tempFolder => {
@@ -13,8 +14,7 @@ const parseSVG = node => {
                 embedImages: true,
             }]).then(results => {
                 return results[0].outputFile.read({ format: formats.utf8 }).then(string => {
-                    console.log(122);
-                    return string;
+                    return svgo(string).data;
                 });
             });
         });

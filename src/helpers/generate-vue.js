@@ -87,20 +87,19 @@ const generateVue = (component, options) => {
     const name = standardizeString(component.name);
 
     // parsing the component to get html and scss
-    const domArray = parseLayers(component, [], name, options);
+    return parseLayers(component, [], name, options).then(domArray => {
+        // generate styles
+        const scss = generateSCSS(domArray, 1, options.tabSize).join('\n\n');
 
-    // generate styles
-    const scss = generateSCSS(domArray, 1, options.tabSize).join('\n\n');
+        // create the root element
+        const root = generateHTML(document.createElement('div'), domArray);
+        root.setAttribute('class', name);
 
-    // create the root element
-    const root = generateHTML(document.createElement('div'), domArray);
-    root.setAttribute('class', name);
+        // convert html to formatted string
+        var div = document.createElement('div');
+        div.innerHTML = root.outerHTML;
 
-    // convert html to formatted string
-    var div = document.createElement('div');
-    div.innerHTML = root.outerHTML;
-
-    let html = `<template>${formatHTML(div, 1, options.tabSize).innerHTML}</template>
+        let html = `<template>${formatHTML(div, 1, options.tabSize).innerHTML}</template>
 
 <script>
 export default {};
@@ -112,8 +111,9 @@ ${scss}
 }
 </style>
 `;
-    
-    return { name, html };
+
+        return html;
+    });
 };
 
 exports.generateVue = generateVue;
