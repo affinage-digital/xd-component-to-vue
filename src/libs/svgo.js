@@ -28,7 +28,20 @@ const plugins = [
         collapseGroups: true,
     },
     {
-        sortAttrs: true,
+        sortAttrs: {
+            order: [
+                'viewBox',
+                'fill', 'stroke', 'marker',
+                'id',
+                'x', 'x1', 'x2',
+                'y', 'y1', 'y2',
+                'width', 'height',
+                'cx', 'cy', 'r',
+                'd', 'points',
+                'xmlns'
+            ],
+            xmlnsOrder: false,
+        },
     },
     {
         removeDimensions: true,
@@ -40,7 +53,10 @@ const plugins = [
         removeAttrs: {
             attrs: '(id|class|style|data-name)' // removeAttrs: {attrs: '(stroke|fill)'},
         },
-    }
+    },
+    {
+        vueCleaner: true,
+    },
 ];
 
 const preparePlugins = () => {

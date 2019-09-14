@@ -24595,15 +24595,30 @@ const generateVue = (component, options) => {
         var div = document.createElement('div');
         div.innerHTML = root.outerHTML;
 
-        let html = `<template>${formatHTML(div, 1, options.tabSize).innerHTML}</template>
+        let formattedHTML = formatHTML(div, 1, options.tabSize).innerHTML;
+        formattedHTML = formattedHTML.replace(/><\/path>/g, ' />');
+
+        // change to self-closed tag
+        formattedHTML = formattedHTML.split('\n').map(str => {
+            if (str.indexOf('<div') === -1 && str.indexOf('></') > 0) {
+                // potentially component
+                const array = str.split('></');
+                array[1] = ' />';
+                return array.join('');
+            } else {
+                return str;
+            }
+        }).join('\n');
+
+        let html = `<template>${ formattedHTML }</template>
 
 <script>
 export default {};
 </script>
 
 <style lang="scss">
-.${name} {
-${scss}
+.${ name } {
+${ scss }
 }
 </style>
 `;
@@ -25898,7 +25913,9 @@ var map = {
 	"./removeStyleElement": "./src/libs/custom-svgo/plugins/removeStyleElement.js",
 	"./removeStyleElement.js": "./src/libs/custom-svgo/plugins/removeStyleElement.js",
 	"./sortAttrs": "./src/libs/custom-svgo/plugins/sortAttrs.js",
-	"./sortAttrs.js": "./src/libs/custom-svgo/plugins/sortAttrs.js"
+	"./sortAttrs.js": "./src/libs/custom-svgo/plugins/sortAttrs.js",
+	"./vueCleaner": "./src/libs/custom-svgo/plugins/vueCleaner.js",
+	"./vueCleaner.js": "./src/libs/custom-svgo/plugins/vueCleaner.js"
 };
 
 
@@ -32183,6 +32200,53 @@ exports.fn = function(item, params) {
 
 /***/ }),
 
+/***/ "./src/libs/custom-svgo/plugins/vueCleaner.js":
+/*!****************************************************!*\
+  !*** ./src/libs/custom-svgo/plugins/vueCleaner.js ***!
+  \****************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+exports.type = 'perItem';
+
+exports.active = false;
+
+exports.description = 'removes styles, defs and sorted svg attributes';
+
+exports.fn = function (item) {
+    // change attr order
+    if (item.isElem('svg')) {
+        // remove attr style from svg tag
+        if (item.hasAttr('style')) {
+            item.removeAttr('style');
+        }
+
+        const attrs = [];
+        const sorted = {};
+
+        item.eachAttr(attr => attrs.push(attr));
+
+        attrs.sort((a, b) => a.name < b.name ? -1 : 1);
+
+        item.attrs = attrs.forEach(attr => {
+            sorted[attr.name] = attr;
+        });
+
+        item.attrs = sorted;
+    }
+
+    // remove defs tag
+    if (item.isElem('defs')) {
+        return false;
+    }
+};
+
+
+/***/ }),
+
 /***/ "./src/libs/custom-svgo/svg2js.js":
 /*!****************************************!*\
   !*** ./src/libs/custom-svgo/svg2js.js ***!
@@ -32601,7 +32665,20 @@ const plugins = [
         collapseGroups: true,
     },
     {
-        sortAttrs: true,
+        sortAttrs: {
+            order: [
+                'viewBox',
+                'fill', 'stroke', 'marker',
+                'id',
+                'x', 'x1', 'x2',
+                'y', 'y1', 'y2',
+                'width', 'height',
+                'cx', 'cy', 'r',
+                'd', 'points',
+                'xmlns'
+            ],
+            xmlnsOrder: false,
+        },
     },
     {
         removeDimensions: true,
@@ -32613,7 +32690,10 @@ const plugins = [
         removeAttrs: {
             attrs: '(id|class|style|data-name)' // removeAttrs: {attrs: '(stroke|fill)'},
         },
-    }
+    },
+    {
+        vueCleaner: true,
+    },
 ];
 
 const preparePlugins = () => {

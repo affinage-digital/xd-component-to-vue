@@ -99,15 +99,30 @@ const generateVue = (component, options) => {
         var div = document.createElement('div');
         div.innerHTML = root.outerHTML;
 
-        let html = `<template>${formatHTML(div, 1, options.tabSize).innerHTML}</template>
+        let formattedHTML = formatHTML(div, 1, options.tabSize).innerHTML;
+        formattedHTML = formattedHTML.replace(/><\/path>/g, ' />');
+
+        // change to self-closed tag
+        formattedHTML = formattedHTML.split('\n').map(str => {
+            if (str.indexOf('<div') === -1 && str.indexOf('></') > 0) {
+                // potentially component
+                const array = str.split('></');
+                array[1] = ' />';
+                return array.join('');
+            } else {
+                return str;
+            }
+        }).join('\n');
+
+        let html = `<template>${ formattedHTML }</template>
 
 <script>
 export default {};
 </script>
 
 <style lang="scss">
-.${name} {
-${scss}
+.${ name } {
+${ scss }
 }
 </style>
 `;
