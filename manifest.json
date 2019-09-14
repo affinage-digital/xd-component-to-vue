@@ -1,12 +1,12 @@
 {
-    "summary": "Export Adobe XD component to Vue.js",
+    "summary": "Export XD component to Vue.js",
     "author": "Igor Yakovlev",
     "name": "Component to Vue",
     "host": {
         "app": "XD",
         "minVersion": "19.0"
     },
-    "description": "Export XD component to Vue.js",
+    "description": "Export Adobe XD component to Vue.js",
     "keywords": [
         "utility",
         "productivity",
