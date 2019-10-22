@@ -4,7 +4,7 @@
 
 form {
     position: relative;
-    width: 1024px;
+    width: 740px;
 }
 
 .notification {
@@ -21,54 +21,57 @@ form {
 
 /* COMPONENTS TAB */
 .components {
+
+}
+
+.components__select-container {
+
+}
+
+.components__columns {
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
 }
 
 .components__left {
-    flex: 1 0 22%;
+    flex: 1 0 42%;
 }
 
 .components__row {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin: 0 0 4px 8px;
-}
-
-.components__row input[type=number] {
-    width: 50px;
-}
-
-.components__row--mr8 {
-    margin-right: 8px;
-}
-
-.components__center {
-    flex: 1 0 33%;
-    padding: 0 0 0 2%;
-}
-
-.components__center-preview {
-    padding: 10px;
-    background: #fff;
     margin: 0 8px;
 }
 
-.components__center-preview img {
+.components__row input[type=checkbox] {
+    padding: 0;
+    margin: 0;
+}
+
+.components__row input[type=number] {
+    width: 30px;
+}
+
+.components__left-preview {
+    padding: 10px;
+    margin: 0 8px;
+}
+
+.components__left-preview img {
     display: block;
     width: 100%;
-    height: 260px;
+    height: 150px;
     object-fit: contain;
 }
 
 .components__right {
-    flex: 1 0 45%;
+    flex: 1 0 50%;
 }
 
 .components__right textarea {
-    height: 320px;
+    height: 194px;
 }
 
 .components__right-buttons {
@@ -87,7 +90,7 @@ form {
 }
 
 .variables textarea {
-    height: 320px;
+    height: 260px;
 }
 
 .variables__left {
@@ -96,4 +99,30 @@ form {
 
 .variables__right {
     flex: 1 0 50%;
+}
+
+/* FOOTER */
+.footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.footer__checkbox {
+
+}
+
+.footer__checkbox label {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: flex-start;
+}
+
+.footer__checkbox label input[type=checkbox] {
+
+}
+
+.footer__checkbox label span {
+    padding: 4px 0 0;
 }

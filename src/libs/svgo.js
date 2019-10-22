@@ -51,7 +51,7 @@ const plugins = [
     },
     {
         removeAttrs: {
-            attrs: '(id|class|style|data-name)' // removeAttrs: {attrs: '(stroke|fill)'},
+            attrs: ['id', 'class', 'style', 'data-name'], // removeAttrs: {attrs: '(stroke|fill)'},
         },
     },
     {

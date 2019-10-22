@@ -39,8 +39,8 @@ const createElement = (tag, attributes) => {
 
             if (name === 'styles') {
                 // Object.assign(element.style, value); // dont need add inline-styles
-            } else if (name === 'html') {
-                element.innerHTML = value;
+            } else if (name === 'html' && value && value.length > 0) {
+                element.insertAdjacentHTML('beforeend', value);
             } else {
                 element.setAttribute(name, value);
             }
@@ -70,6 +70,12 @@ const formatHTML = (node, level, tabSize) => {
 
     for (let i = 0; i < node.children.length; i++) {
         textNode = document.createTextNode('\n' + indentBefore);
+
+        // force delete style attribute
+        if (node.children[i].getAttribute('style')) {
+            node.children[i].removeAttribute('style');
+        }
+
         node.insertBefore(textNode, node.children[i]);
 
         formatHTML(node.children[i], level, tabSize);
@@ -88,6 +94,7 @@ const generateVue = (component, options) => {
 
     // parsing the component to get html and scss
     return parseLayers(component, [], name, options).then(domArray => {
+        
         // generate styles
         const scss = generateSCSS(domArray, 1, options.tabSize).join('\n\n');
 

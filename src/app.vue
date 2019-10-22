@@ -15,28 +15,7 @@
         <hr />
 
         <div class="components" :class="{ 'h-hide': !isFirstTab }">
-            <div class="components__left">
-                <h2>Settings</h2>
-
-                <div class="components__row">
-                    <label for="option-only-master">Only Master components</label>
-                    <input id="option-only-master" type="checkbox" v-model="options.onlyMasterComponent" @change="changeOnlyMastersComponent" />
-                </div>
-
-                <div class="components__row components__row--mr8">
-                    <label for="option-tab-size">Tab size</label>
-                    <input id="option-tab-size" uxp-quiet="true" type="number" v-model="options.tabSize" @input="changeComponent" />
-                </div>
-
-                <div class="components__row">
-                    <label for="option-use-typograf">Use typograf for texts</label>
-                    <input id="option-use-typograf" type="checkbox" v-model="options.useTypograf" @change="changeComponent" />
-                </div>
-            </div>
-
-            <div class="components__center">
-                <h2>Component</h2>
-
+            <div class="components__select-container">
                 <select ref="componentSelect" @change="changeComponent">
                     <option disabled selected>Choose component</option>
                     <option v-for="item in components" :key="item.guid"
@@ -44,20 +23,40 @@
                         :selected="currentComponent.node && item.guid === currentComponent.node.guid"
                         v-html="`${ item.artboardName } // ${ item.name }`"></option>
                 </select>
-
-                <div class="components__center-preview">
-                    <img :src="currentComponent.preview" />
-                </div>
             </div>
 
-            <div class="components__right">
-                <h2 v-html="`${currentComponent.node ? currentComponent.name : 'Choose component for export to *.vue'}`"></h2>
+            <hr v-show="currentComponent.node" />
 
-                <textarea readonly v-model="currentComponent.html"></textarea>
+            <div v-show="currentComponent.node" class="components__columns">
+                <div class="components__left">
+                    <h2>Settings</h2>
 
-                <div class="components__right-buttons">
-                    <button uxp-quiet="true" uxp-variant="primary" @click="copyComponentToClipboard">Copy component</button>
-                    <button uxp-quiet="true" uxp-variant="primary" @click="saveComponent">Save to file</button>
+                    <div class="components__row">
+                        <label>Tab size</label>
+                        <input uxp-quiet="true" type="number" v-model="options.tabSize" @input="changeComponent" />
+                    </div>
+
+                    <div class="components__row">
+                        <label>Use typograf for texts</label>
+                        <input type="checkbox" v-model="options.useTypograf" @change="changeComponent" />
+                    </div>
+
+                    <hr />
+
+                    <div class="components__left-preview">
+                        <img :src="currentComponent.preview" />
+                    </div>
+                </div>
+
+                <div class="components__right">
+                    <h2 v-html="`${currentComponent.node ? currentComponent.name : 'Choose component for export to *.vue'}`"></h2>
+
+                    <textarea readonly v-model="currentComponent.html"></textarea>
+
+                    <div class="components__right-buttons">
+                        <button uxp-quiet="true" uxp-variant="primary" @click="copyComponentToClipboard">Copy component</button>
+                        <button uxp-quiet="true" uxp-variant="primary" @click="saveComponent">Save to file</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -66,7 +65,7 @@
             <div class="variables__left">
                 <h2>Color variables</h2>
                 <textarea readonly v-model="scssVariables"></textarea>
-                <div>
+                <div v-show="scssVariables.length > 0">
                     <button uxp-quiet="true" uxp-variant="primary" @click="copySCSSVariablesToClipboard">Copy colors</button>
                 </div>
             </div>
@@ -74,17 +73,23 @@
             <div class="variables__right">
                 <h2>Typography</h2>
                 <textarea readonly v-model="typographyVariables"></textarea>
-                <div>
+                <div v-show="typographyVariables.length > 0">
                     <button uxp-quiet="true" uxp-variant="primary" @click="copyTypographyVariablesToClipboard">Copy typography</button>
                 </div>
             </div>
         </div>
 
         <hr />
-        <footer>
-            <!-- <button uxp-variant="primary" @click="refresh">Refresh</button> -->
+        <div class="footer">
+            <div class="footer__checkbox">
+                <label>
+                    <input type="checkbox" v-model="options.onlyMasterComponent" @change="changeOnlyMastersComponent" />
+                    <span>Show only Master components</span>
+                </label>
+            </div>
+
             <button uxp-variant="primary" @click="dialog.close()" type="submit">Close</button>
-        </footer>
+        </div>
     </form>
 </template>
 
@@ -130,6 +135,7 @@ module.exports = {
             isFirstTab: true,
             assetsColors: {},
             assetsTypography: [],
+            components: [],
             currentComponent: {
                 node: null,
                 name: '',
@@ -140,55 +146,23 @@ module.exports = {
                 onlyMasterComponent: false,
                 tabSize: 4,
                 useTypograf: false,
+                fontMixin: `@mixin fontface($family, $localname, $localname2, $filename, $weight, $style) {
+    @font-face {
+        font-display: swap;
+        font-family: $family;
+        src: local('#{$localname}'),
+            local('#{$localname2}'),
+            url('/assets/fonts/#{$filename}.woff2') format('woff2'),
+            url('/assets/fonts/#{$filename}.woff') format('woff');
+        font-weight: $weight;
+        font-style: $style;
+    }
+}`,
             }
         }
     },
 
     computed: {
-        components() {
-            const components = [];
-
-            const push = component => {
-                if (this.options.onlyMasterComponent && !component.isMaster) return;
-
-                // check artboard name if exist
-                let artboardName = 'Canvas';
-
-                let tempNode = component;
-                const parentsType = [];
-                while (tempNode) {
-                    if (tempNode.constructor.name === 'Artboard') {
-                        artboardName = tempNode.name;
-                    }
-                    tempNode = tempNode.parent;
-                }
-
-                components.push({
-                    guid: component.guid,
-                    name: component.name + (component.isMaster ? ' (master)' : ''),
-                    artboardName,
-                    component,
-                });
-            };
-
-            // parsing project
-            const finderSymbolInstance = rootNode => {
-                rootNode.children.forEach(node => {
-                    if (node instanceof SymbolInstance) {
-                        push(node);
-                    }
-
-                    if (node.children.length > 0) {
-                        finderSymbolInstance(node);
-                    }
-                });
-            };
-
-            finderSymbolInstance(this.documentRoot);
-
-            return components;
-        },
-
         scssVariables: {
             get() {
                 let result = '';
@@ -206,18 +180,9 @@ module.exports = {
 
         typographyVariables: {
             get() {
-                let result = `@mixin fontface($family, $localname, $localname2, $filename, $weight, $style) {
-    @font-face {
-        font-display: swap;
-        font-family: $family;
-        src: local('#{$localname}'),
-            local('#{$localname2}'),
-            url('/assets/fonts/#{$filename}.woff2') format('woff2'),
-            url('/assets/fonts/#{$filename}.woff') format('woff');
-        font-weight: $weight;
-        font-style: $style;
-    }
-}\n\n`;
+                if (this.assetsTypography.length === 0) return '';
+
+                let result = this.options.fontMixin + '\n\n';
 
                 this.assetsTypography.forEach(({ style }) => {
                     const { fontWeight, fontStyle } = getFontParameters(style.fontStyle.toLowerCase());
@@ -238,11 +203,22 @@ module.exports = {
         },
     },
 
+    watch: {
+        'options.onlyMasterComponent'() {
+            this.refreshDialog();
+        },
+    },
+
     mounted() {
-        this.loadUI();
+        this.refreshDialog();
     },
 
     methods: {
+        refreshDialog() {
+            this.updateComponents();
+            this.loadUI();
+        },
+
         loadUI() {
             // load assets
             this.parseAssetsColors();
@@ -259,6 +235,58 @@ module.exports = {
             this.$nextTick(() => {
                 this.changeComponent(); // for generate html
             });
+        },
+
+        prepareComponent(componentNode) {
+            if (this.options.onlyMasterComponent && !componentNode.isMaster) return;
+
+            // check artboard name if exist
+            let artboardName = 'Canvas';
+
+            let tempNode = componentNode;
+            const parentsType = [];
+            while (tempNode) {
+                if (tempNode.constructor.name === 'Artboard') {
+                    artboardName = tempNode.name;
+                }
+                tempNode = tempNode.parent;
+            }
+
+            return {
+                guid: componentNode.guid,
+                name: componentNode.name + (componentNode.isMaster ? ' (master)' : ''),
+                artboardName,
+                component: componentNode,
+            };
+        },
+
+        // parsing project
+        findSymbolInstance(placeholderArray, rootNode) {
+            rootNode.children.forEach(node => {
+                if (node instanceof SymbolInstance) {
+                    const component = this.prepareComponent(node);
+                    if (component) {
+                        placeholderArray.push(component);
+                    }
+                }
+
+                if (node.children.length > 0) {
+                    this.findSymbolInstance(placeholderArray, node);
+                }
+            });
+
+            return placeholderArray;
+        },
+
+        updateComponents() {
+            if (this.documentRoot.children.length === 0) {
+                this.showNotification({
+                    text: 'Your project is empty',
+                    color: 'red',
+                });
+            } else {
+                this.components = this.findSymbolInstance([], this.documentRoot);
+            }
         },
 
         showNotification(notification) {

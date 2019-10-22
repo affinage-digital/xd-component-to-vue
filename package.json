@@ -3,6 +3,7 @@
     "version": "1.0.0",
     "main": "main.js",
     "scripts": {
+        "release": "webpack --mode production",
         "build": "webpack --mode development",
         "dev": "nodemon --watch ./src --ext js,vue,css --watch webpack.config.js --exec npm run build"
     },

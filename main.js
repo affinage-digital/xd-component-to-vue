@@ -91,10 +91,10 @@ module.exports =
 /*!***********************!*\
   !*** ./manifest.json ***!
   \***********************/
-/*! exports provided: summary, languages, author, name, host, description, helpUrl, id, icons, uiEntryPoints, version, default */
+/*! exports provided: summary, author, name, host, description, keywords, languages, website, helpUrl, id, icons, uiEntryPoints, version, default */
 /***/ (function(module) {
 
-module.exports = JSON.parse("{\"summary\":\"Export Adobe XD component to Vue.js\",\"languages\":[\"en\"],\"author\":\"Igor Yakovlev\",\"name\":\"Component to Vue\",\"host\":{\"app\":\"XD\",\"minVersion\":\"13.0\"},\"description\":\"Export Adobe XD component to Vue.js\",\"helpUrl\":\"https://github.com/LeXX/xd-component-to-vue\",\"id\":\"6f933951\",\"icons\":[{\"path\":\"images/icon@1x.png\",\"width\":24,\"height\":24},{\"path\":\"images/icon@2x.png\",\"width\":48,\"height\":48},{\"path\":\"images/icon@3x.png\",\"width\":96,\"height\":96},{\"path\":\"images/icon@4x.png\",\"width\":144,\"height\":144},{\"path\":\"images/icon@5x.png\",\"width\":192,\"height\":192}],\"uiEntryPoints\":[{\"label\":\"Export to Vue\",\"type\":\"menu\",\"commandId\":\"exportToVue\"}],\"version\":\"1.0.0\"}");
+module.exports = JSON.parse("{\"summary\":\"Export XD component to Vue.js\",\"author\":\"Igor Yakovlev\",\"name\":\"Component to Vue\",\"host\":{\"app\":\"XD\",\"minVersion\":\"19.0\"},\"description\":\"Parsing all components in Adobe XD project\\nСonvenient interface for viewing all components on the project\\nMinification Inline-SVG\\nCopy template to cpliboard or save to *.vue file\\nGenerate SCSS variables and use it in <style lang=\\\"scss\\\">\\nPlugin parse HTML text with Typograf\\nIn setting change indent size (2 or 4)\",\"keywords\":[\"utility\",\"productivity\",\"automation\"],\"languages\":[\"en\"],\"website\":\"http://affinage.ru/en\",\"helpUrl\":\"https://github.com/affinage-digital/xd-component-to-vue\",\"id\":\"6f933951\",\"icons\":[{\"path\":\"images/icon@1x.png\",\"width\":24,\"height\":24},{\"path\":\"images/icon@2x.png\",\"width\":48,\"height\":48},{\"path\":\"images/icon@3x.png\",\"width\":96,\"height\":96},{\"path\":\"images/icon@4x.png\",\"width\":144,\"height\":144},{\"path\":\"images/icon@5x.png\",\"width\":192,\"height\":192}],\"uiEntryPoints\":[{\"label\":\"Export to Vue\",\"type\":\"menu\",\"commandId\":\"exportToVue\"}],\"version\":\"1.0.0\"}");
 
 /***/ }),
 
@@ -2209,7 +2209,7 @@ function objectToString(o) {
 
 exports = module.exports = __webpack_require__(/*! ../node_modules/css-loader/dist/runtime/api.js */ "./node_modules/css-loader/dist/runtime/api.js")(false);
 // Module
-exports.push([module.i, ".h-hide {\n    display: none !important;\n}\n\nform {\n    position: relative;\n    width: 1024px;\n}\n\n.notification {\n    position: absolute;\n    top: 7px;\n    right: 8px;\n    max-width: 700px;\n    text-align: right;\n}\n\n.menu {\n    display: flex;\n}\n\n/* COMPONENTS TAB */\n.components {\n    display: flex;\n    flex-wrap: wrap;\n    justify-content: space-between;\n}\n\n.components__left {\n    flex: 1 0 22%;\n}\n\n.components__row {\n    display: flex;\n    align-items: center;\n    justify-content: space-between;\n    margin: 0 0 4px 8px;\n}\n\n.components__row input[type=number] {\n    width: 50px;\n}\n\n.components__row--mr8 {\n    margin-right: 8px;\n}\n\n.components__center {\n    flex: 1 0 33%;\n    padding: 0 0 0 2%;\n}\n\n.components__center-preview {\n    padding: 10px;\n    background: #fff;\n    margin: 0 8px;\n}\n\n.components__center-preview img {\n    display: block;\n    width: 100%;\n    height: 260px;\n    object-fit: contain;\n}\n\n.components__right {\n    flex: 1 0 45%;\n}\n\n.components__right textarea {\n    height: 320px;\n}\n\n.components__right-buttons {\n    display: flex;\n    flex-wrap: wrap;\n}\n\n.components__right-buttons button {\n    flex: 1 0 25%;\n}\n\n/* VARIABLES TAB */\n.variables {\n    display: flex;\n    flex-wrap: wrap;\n}\n\n.variables textarea {\n    height: 320px;\n}\n\n.variables__left {\n    flex: 1 0 50%;\n}\n\n.variables__right {\n    flex: 1 0 50%;\n}\n", ""]);
+exports.push([module.i, ".h-hide {\n    display: none !important;\n}\n\nform {\n    position: relative;\n    width: 740px;\n}\n\n.notification {\n    position: absolute;\n    top: 7px;\n    right: 8px;\n    max-width: 700px;\n    text-align: right;\n}\n\n.menu {\n    display: flex;\n}\n\n/* COMPONENTS TAB */\n.components {\n\n}\n\n.components__select-container {\n\n}\n\n.components__columns {\n    display: flex;\n    flex-wrap: wrap;\n    justify-content: space-between;\n}\n\n.components__left {\n    flex: 1 0 42%;\n}\n\n.components__row {\n    display: flex;\n    align-items: center;\n    justify-content: space-between;\n    margin: 0 8px;\n}\n\n.components__row input[type=checkbox] {\n    padding: 0;\n    margin: 0;\n}\n\n.components__row input[type=number] {\n    width: 30px;\n}\n\n.components__left-preview {\n    padding: 10px;\n    margin: 0 8px;\n}\n\n.components__left-preview img {\n    display: block;\n    width: 100%;\n    height: 150px;\n    object-fit: contain;\n}\n\n.components__right {\n    flex: 1 0 50%;\n}\n\n.components__right textarea {\n    height: 194px;\n}\n\n.components__right-buttons {\n    display: flex;\n    flex-wrap: wrap;\n}\n\n.components__right-buttons button {\n    flex: 1 0 25%;\n}\n\n/* VARIABLES TAB */\n.variables {\n    display: flex;\n    flex-wrap: wrap;\n}\n\n.variables textarea {\n    height: 260px;\n}\n\n.variables__left {\n    flex: 1 0 50%;\n}\n\n.variables__right {\n    flex: 1 0 50%;\n}\n\n/* FOOTER */\n.footer {\n    display: flex;\n    justify-content: space-between;\n    align-items: center;\n}\n\n.footer__checkbox {\n\n}\n\n.footer__checkbox label {\n    display: flex;\n    flex-direction: row;\n    flex-wrap: nowrap;\n    align-items: flex-start;\n}\n\n.footer__checkbox label input[type=checkbox] {\n\n}\n\n.footer__checkbox label span {\n    padding: 4px 0 0;\n}", ""]);
 
 
 /***/ }),
@@ -14972,6 +14972,11 @@ function config (name) {
 //
 //
 //
+//
+//
+//
+//
+//
 
 const application = __webpack_require__(/*! application */ "application");
 const clipboard = __webpack_require__(/*! clipboard */ "clipboard");
@@ -15014,6 +15019,7 @@ module.exports = {
             isFirstTab: true,
             assetsColors: {},
             assetsTypography: [],
+            components: [],
             currentComponent: {
                 node: null,
                 name: '',
@@ -15024,55 +15030,23 @@ module.exports = {
                 onlyMasterComponent: false,
                 tabSize: 4,
                 useTypograf: false,
+                fontMixin: `@mixin fontface($family, $localname, $localname2, $filename, $weight, $style) {
+    @font-face {
+        font-display: swap;
+        font-family: $family;
+        src: local('#{$localname}'),
+            local('#{$localname2}'),
+            url('/assets/fonts/#{$filename}.woff2') format('woff2'),
+            url('/assets/fonts/#{$filename}.woff') format('woff');
+        font-weight: $weight;
+        font-style: $style;
+    }
+}`,
             }
         }
     },
 
     computed: {
-        components() {
-            const components = [];
-
-            const push = component => {
-                if (this.options.onlyMasterComponent && !component.isMaster) return;
-
-                // check artboard name if exist
-                let artboardName = 'Canvas';
-
-                let tempNode = component;
-                const parentsType = [];
-                while (tempNode) {
-                    if (tempNode.constructor.name === 'Artboard') {
-                        artboardName = tempNode.name;
-                    }
-                    tempNode = tempNode.parent;
-                }
-
-                components.push({
-                    guid: component.guid,
-                    name: component.name + (component.isMaster ? ' (master)' : ''),
-                    artboardName,
-                    component,
-                });
-            };
-
-            // parsing project
-            const finderSymbolInstance = rootNode => {
-                rootNode.children.forEach(node => {
-                    if (node instanceof SymbolInstance) {
-                        push(node);
-                    }
-
-                    if (node.children.length > 0) {
-                        finderSymbolInstance(node);
-                    }
-                });
-            };
-
-            finderSymbolInstance(this.documentRoot);
-
-            return components;
-        },
-
         scssVariables: {
             get() {
                 let result = '';
@@ -15090,18 +15064,9 @@ module.exports = {
 
         typographyVariables: {
             get() {
-                let result = `@mixin fontface($family, $localname, $localname2, $filename, $weight, $style) {
-    @font-face {
-        font-display: swap;
-        font-family: $family;
-        src: local('#{$localname}'),
-            local('#{$localname2}'),
-            url('/assets/fonts/#{$filename}.woff2') format('woff2'),
-            url('/assets/fonts/#{$filename}.woff') format('woff');
-        font-weight: $weight;
-        font-style: $style;
-    }
-}\n\n`;
+                if (this.assetsTypography.length === 0) return '';
+
+                let result = this.options.fontMixin + '\n\n';
 
                 this.assetsTypography.forEach(({ style }) => {
                     const { fontWeight, fontStyle } = getFontParameters(style.fontStyle.toLowerCase());
@@ -15122,11 +15087,22 @@ module.exports = {
         },
     },
 
+    watch: {
+        'options.onlyMasterComponent'() {
+            this.refreshDialog();
+        },
+    },
+
     mounted() {
-        this.loadUI();
+        this.refreshDialog();
     },
 
     methods: {
+        refreshDialog() {
+            this.updateComponents();
+            this.loadUI();
+        },
+
         loadUI() {
             // load assets
             this.parseAssetsColors();
@@ -15143,6 +15119,58 @@ module.exports = {
             this.$nextTick(() => {
                 this.changeComponent(); // for generate html
             });
+        },
+
+        prepareComponent(componentNode) {
+            if (this.options.onlyMasterComponent && !componentNode.isMaster) return;
+
+            // check artboard name if exist
+            let artboardName = 'Canvas';
+
+            let tempNode = componentNode;
+            const parentsType = [];
+            while (tempNode) {
+                if (tempNode.constructor.name === 'Artboard') {
+                    artboardName = tempNode.name;
+                }
+                tempNode = tempNode.parent;
+            }
+
+            return {
+                guid: componentNode.guid,
+                name: componentNode.name + (componentNode.isMaster ? ' (master)' : ''),
+                artboardName,
+                component: componentNode,
+            };
+        },
+
+        // parsing project
+        findSymbolInstance(placeholderArray, rootNode) {
+            rootNode.children.forEach(node => {
+                if (node instanceof SymbolInstance) {
+                    const component = this.prepareComponent(node);
+                    if (component) {
+                        placeholderArray.push(component);
+                    }
+                }
+
+                if (node.children.length > 0) {
+                    this.findSymbolInstance(placeholderArray, node);
+                }
+            });
+
+            return placeholderArray;
+        },
+
+        updateComponents() {
+            if (this.documentRoot.children.length === 0) {
+                this.showNotification({
+                    text: 'Your project is empty',
+                    color: 'red',
+                });
+            } else {
+                this.components = this.findSymbolInstance([], this.documentRoot);
+            }
         },
 
         showNotification(notification) {
@@ -15343,155 +15371,7 @@ var render = function() {
       "div",
       { staticClass: "components", class: { "h-hide": !_vm.isFirstTab } },
       [
-        _c("div", { staticClass: "components__left" }, [
-          _c("h2", [_vm._v("Settings")]),
-          _vm._v(" "),
-          _c("div", { staticClass: "components__row" }, [
-            _c("label", { attrs: { for: "option-only-master" } }, [
-              _vm._v("Only Master components")
-            ]),
-            _vm._v(" "),
-            _c("input", {
-              directives: [
-                {
-                  name: "model",
-                  rawName: "v-model",
-                  value: _vm.options.onlyMasterComponent,
-                  expression: "options.onlyMasterComponent"
-                }
-              ],
-              attrs: { id: "option-only-master", type: "checkbox" },
-              domProps: {
-                checked: Array.isArray(_vm.options.onlyMasterComponent)
-                  ? _vm._i(_vm.options.onlyMasterComponent, null) > -1
-                  : _vm.options.onlyMasterComponent
-              },
-              on: {
-                change: [
-                  function($event) {
-                    var $$a = _vm.options.onlyMasterComponent,
-                      $$el = $event.target,
-                      $$c = $$el.checked ? true : false
-                    if (Array.isArray($$a)) {
-                      var $$v = null,
-                        $$i = _vm._i($$a, $$v)
-                      if ($$el.checked) {
-                        $$i < 0 &&
-                          _vm.$set(
-                            _vm.options,
-                            "onlyMasterComponent",
-                            $$a.concat([$$v])
-                          )
-                      } else {
-                        $$i > -1 &&
-                          _vm.$set(
-                            _vm.options,
-                            "onlyMasterComponent",
-                            $$a.slice(0, $$i).concat($$a.slice($$i + 1))
-                          )
-                      }
-                    } else {
-                      _vm.$set(_vm.options, "onlyMasterComponent", $$c)
-                    }
-                  },
-                  _vm.changeOnlyMastersComponent
-                ]
-              }
-            })
-          ]),
-          _vm._v(" "),
-          _c("div", { staticClass: "components__row components__row--mr8" }, [
-            _c("label", { attrs: { for: "option-tab-size" } }, [
-              _vm._v("Tab size")
-            ]),
-            _vm._v(" "),
-            _c("input", {
-              directives: [
-                {
-                  name: "model",
-                  rawName: "v-model",
-                  value: _vm.options.tabSize,
-                  expression: "options.tabSize"
-                }
-              ],
-              attrs: {
-                id: "option-tab-size",
-                "uxp-quiet": "true",
-                type: "number"
-              },
-              domProps: { value: _vm.options.tabSize },
-              on: {
-                input: [
-                  function($event) {
-                    if ($event.target.composing) {
-                      return
-                    }
-                    _vm.$set(_vm.options, "tabSize", $event.target.value)
-                  },
-                  _vm.changeComponent
-                ]
-              }
-            })
-          ]),
-          _vm._v(" "),
-          _c("div", { staticClass: "components__row" }, [
-            _c("label", { attrs: { for: "option-use-typograf" } }, [
-              _vm._v("Use typograf for texts")
-            ]),
-            _vm._v(" "),
-            _c("input", {
-              directives: [
-                {
-                  name: "model",
-                  rawName: "v-model",
-                  value: _vm.options.useTypograf,
-                  expression: "options.useTypograf"
-                }
-              ],
-              attrs: { id: "option-use-typograf", type: "checkbox" },
-              domProps: {
-                checked: Array.isArray(_vm.options.useTypograf)
-                  ? _vm._i(_vm.options.useTypograf, null) > -1
-                  : _vm.options.useTypograf
-              },
-              on: {
-                change: [
-                  function($event) {
-                    var $$a = _vm.options.useTypograf,
-                      $$el = $event.target,
-                      $$c = $$el.checked ? true : false
-                    if (Array.isArray($$a)) {
-                      var $$v = null,
-                        $$i = _vm._i($$a, $$v)
-                      if ($$el.checked) {
-                        $$i < 0 &&
-                          _vm.$set(
-                            _vm.options,
-                            "useTypograf",
-                            $$a.concat([$$v])
-                          )
-                      } else {
-                        $$i > -1 &&
-                          _vm.$set(
-                            _vm.options,
-                            "useTypograf",
-                            $$a.slice(0, $$i).concat($$a.slice($$i + 1))
-                          )
-                      }
-                    } else {
-                      _vm.$set(_vm.options, "useTypograf", $$c)
-                    }
-                  },
-                  _vm.changeComponent
-                ]
-              }
-            })
-          ])
-        ]),
-        _vm._v(" "),
-        _c("div", { staticClass: "components__center" }, [
-          _c("h2", [_vm._v("Component")]),
-          _vm._v(" "),
+        _c("div", { staticClass: "components__select-container" }, [
           _c(
             "select",
             { ref: "componentSelect", on: { change: _vm.changeComponent } },
@@ -15514,66 +15394,179 @@ var render = function() {
               })
             ],
             2
-          ),
-          _vm._v(" "),
-          _c("div", { staticClass: "components__center-preview" }, [
-            _c("img", { attrs: { src: _vm.currentComponent.preview } })
-          ])
+          )
         ]),
         _vm._v(" "),
-        _c("div", { staticClass: "components__right" }, [
-          _c("h2", {
-            domProps: {
-              innerHTML: _vm._s(
-                "" +
-                  (_vm.currentComponent.node
-                    ? _vm.currentComponent.name
-                    : "Choose component for export to *.vue")
-              )
+        _c("hr", {
+          directives: [
+            {
+              name: "show",
+              rawName: "v-show",
+              value: _vm.currentComponent.node,
+              expression: "currentComponent.node"
             }
-          }),
-          _vm._v(" "),
-          _c("textarea", {
+          ]
+        }),
+        _vm._v(" "),
+        _c(
+          "div",
+          {
             directives: [
               {
-                name: "model",
-                rawName: "v-model",
-                value: _vm.currentComponent.html,
-                expression: "currentComponent.html"
+                name: "show",
+                rawName: "v-show",
+                value: _vm.currentComponent.node,
+                expression: "currentComponent.node"
               }
             ],
-            attrs: { readonly: "" },
-            domProps: { value: _vm.currentComponent.html },
-            on: {
-              input: function($event) {
-                if ($event.target.composing) {
-                  return
-                }
-                _vm.$set(_vm.currentComponent, "html", $event.target.value)
-              }
-            }
-          }),
-          _vm._v(" "),
-          _c("div", { staticClass: "components__right-buttons" }, [
-            _c(
-              "button",
-              {
-                attrs: { "uxp-quiet": "true", "uxp-variant": "primary" },
-                on: { click: _vm.copyComponentToClipboard }
-              },
-              [_vm._v("Copy component")]
-            ),
+            staticClass: "components__columns"
+          },
+          [
+            _c("div", { staticClass: "components__left" }, [
+              _c("h2", [_vm._v("Settings")]),
+              _vm._v(" "),
+              _c("div", { staticClass: "components__row" }, [
+                _c("label", [_vm._v("Tab size")]),
+                _vm._v(" "),
+                _c("input", {
+                  directives: [
+                    {
+                      name: "model",
+                      rawName: "v-model",
+                      value: _vm.options.tabSize,
+                      expression: "options.tabSize"
+                    }
+                  ],
+                  attrs: { "uxp-quiet": "true", type: "number" },
+                  domProps: { value: _vm.options.tabSize },
+                  on: {
+                    input: [
+                      function($event) {
+                        if ($event.target.composing) {
+                          return
+                        }
+                        _vm.$set(_vm.options, "tabSize", $event.target.value)
+                      },
+                      _vm.changeComponent
+                    ]
+                  }
+                })
+              ]),
+              _vm._v(" "),
+              _c("div", { staticClass: "components__row" }, [
+                _c("label", [_vm._v("Use typograf for texts")]),
+                _vm._v(" "),
+                _c("input", {
+                  directives: [
+                    {
+                      name: "model",
+                      rawName: "v-model",
+                      value: _vm.options.useTypograf,
+                      expression: "options.useTypograf"
+                    }
+                  ],
+                  attrs: { type: "checkbox" },
+                  domProps: {
+                    checked: Array.isArray(_vm.options.useTypograf)
+                      ? _vm._i(_vm.options.useTypograf, null) > -1
+                      : _vm.options.useTypograf
+                  },
+                  on: {
+                    change: [
+                      function($event) {
+                        var $$a = _vm.options.useTypograf,
+                          $$el = $event.target,
+                          $$c = $$el.checked ? true : false
+                        if (Array.isArray($$a)) {
+                          var $$v = null,
+                            $$i = _vm._i($$a, $$v)
+                          if ($$el.checked) {
+                            $$i < 0 &&
+                              _vm.$set(
+                                _vm.options,
+                                "useTypograf",
+                                $$a.concat([$$v])
+                              )
+                          } else {
+                            $$i > -1 &&
+                              _vm.$set(
+                                _vm.options,
+                                "useTypograf",
+                                $$a.slice(0, $$i).concat($$a.slice($$i + 1))
+                              )
+                          }
+                        } else {
+                          _vm.$set(_vm.options, "useTypograf", $$c)
+                        }
+                      },
+                      _vm.changeComponent
+                    ]
+                  }
+                })
+              ]),
+              _vm._v(" "),
+              _c("hr"),
+              _vm._v(" "),
+              _c("div", { staticClass: "components__left-preview" }, [
+                _c("img", { attrs: { src: _vm.currentComponent.preview } })
+              ])
+            ]),
             _vm._v(" "),
-            _c(
-              "button",
-              {
-                attrs: { "uxp-quiet": "true", "uxp-variant": "primary" },
-                on: { click: _vm.saveComponent }
-              },
-              [_vm._v("Save to file")]
-            )
-          ])
-        ])
+            _c("div", { staticClass: "components__right" }, [
+              _c("h2", {
+                domProps: {
+                  innerHTML: _vm._s(
+                    "" +
+                      (_vm.currentComponent.node
+                        ? _vm.currentComponent.name
+                        : "Choose component for export to *.vue")
+                  )
+                }
+              }),
+              _vm._v(" "),
+              _c("textarea", {
+                directives: [
+                  {
+                    name: "model",
+                    rawName: "v-model",
+                    value: _vm.currentComponent.html,
+                    expression: "currentComponent.html"
+                  }
+                ],
+                attrs: { readonly: "" },
+                domProps: { value: _vm.currentComponent.html },
+                on: {
+                  input: function($event) {
+                    if ($event.target.composing) {
+                      return
+                    }
+                    _vm.$set(_vm.currentComponent, "html", $event.target.value)
+                  }
+                }
+              }),
+              _vm._v(" "),
+              _c("div", { staticClass: "components__right-buttons" }, [
+                _c(
+                  "button",
+                  {
+                    attrs: { "uxp-quiet": "true", "uxp-variant": "primary" },
+                    on: { click: _vm.copyComponentToClipboard }
+                  },
+                  [_vm._v("Copy component")]
+                ),
+                _vm._v(" "),
+                _c(
+                  "button",
+                  {
+                    attrs: { "uxp-quiet": "true", "uxp-variant": "primary" },
+                    on: { click: _vm.saveComponent }
+                  },
+                  [_vm._v("Save to file")]
+                )
+              ])
+            ])
+          ]
+        )
       ]
     ),
     _vm._v(" "),
@@ -15605,16 +15598,29 @@ var render = function() {
             }
           }),
           _vm._v(" "),
-          _c("div", [
-            _c(
-              "button",
-              {
-                attrs: { "uxp-quiet": "true", "uxp-variant": "primary" },
-                on: { click: _vm.copySCSSVariablesToClipboard }
-              },
-              [_vm._v("Copy colors")]
-            )
-          ])
+          _c(
+            "div",
+            {
+              directives: [
+                {
+                  name: "show",
+                  rawName: "v-show",
+                  value: _vm.scssVariables.length > 0,
+                  expression: "scssVariables.length > 0"
+                }
+              ]
+            },
+            [
+              _c(
+                "button",
+                {
+                  attrs: { "uxp-quiet": "true", "uxp-variant": "primary" },
+                  on: { click: _vm.copySCSSVariablesToClipboard }
+                },
+                [_vm._v("Copy colors")]
+              )
+            ]
+          )
         ]),
         _vm._v(" "),
         _c("div", { staticClass: "variables__right" }, [
@@ -15641,23 +15647,90 @@ var render = function() {
             }
           }),
           _vm._v(" "),
-          _c("div", [
-            _c(
-              "button",
-              {
-                attrs: { "uxp-quiet": "true", "uxp-variant": "primary" },
-                on: { click: _vm.copyTypographyVariablesToClipboard }
-              },
-              [_vm._v("Copy typography")]
-            )
-          ])
+          _c(
+            "div",
+            {
+              directives: [
+                {
+                  name: "show",
+                  rawName: "v-show",
+                  value: _vm.typographyVariables.length > 0,
+                  expression: "typographyVariables.length > 0"
+                }
+              ]
+            },
+            [
+              _c(
+                "button",
+                {
+                  attrs: { "uxp-quiet": "true", "uxp-variant": "primary" },
+                  on: { click: _vm.copyTypographyVariablesToClipboard }
+                },
+                [_vm._v("Copy typography")]
+              )
+            ]
+          )
         ])
       ]
     ),
     _vm._v(" "),
     _c("hr"),
     _vm._v(" "),
-    _c("footer", [
+    _c("div", { staticClass: "footer" }, [
+      _c("div", { staticClass: "footer__checkbox" }, [
+        _c("label", [
+          _c("input", {
+            directives: [
+              {
+                name: "model",
+                rawName: "v-model",
+                value: _vm.options.onlyMasterComponent,
+                expression: "options.onlyMasterComponent"
+              }
+            ],
+            attrs: { type: "checkbox" },
+            domProps: {
+              checked: Array.isArray(_vm.options.onlyMasterComponent)
+                ? _vm._i(_vm.options.onlyMasterComponent, null) > -1
+                : _vm.options.onlyMasterComponent
+            },
+            on: {
+              change: [
+                function($event) {
+                  var $$a = _vm.options.onlyMasterComponent,
+                    $$el = $event.target,
+                    $$c = $$el.checked ? true : false
+                  if (Array.isArray($$a)) {
+                    var $$v = null,
+                      $$i = _vm._i($$a, $$v)
+                    if ($$el.checked) {
+                      $$i < 0 &&
+                        _vm.$set(
+                          _vm.options,
+                          "onlyMasterComponent",
+                          $$a.concat([$$v])
+                        )
+                    } else {
+                      $$i > -1 &&
+                        _vm.$set(
+                          _vm.options,
+                          "onlyMasterComponent",
+                          $$a.slice(0, $$i).concat($$a.slice($$i + 1))
+                        )
+                    }
+                  } else {
+                    _vm.$set(_vm.options, "onlyMasterComponent", $$c)
+                  }
+                },
+                _vm.changeOnlyMastersComponent
+              ]
+            }
+          }),
+          _vm._v(" "),
+          _c("span", [_vm._v("Show only Master components")])
+        ])
+      ]),
+      _vm._v(" "),
       _c(
         "button",
         {
@@ -24345,13 +24418,33 @@ __webpack_require__.r(__webpack_exports__);
 
 const getColorName = color => {
     const { assetsColors } = __webpack_require__(/*! ../main */ "./src/main.js").getVueAppClass();
-    
-    let desiredColor = color.toHex(false); // false - means get 3 chars if possible
-    if (color.a < 255) {
-        desiredColor = `rgba(${desiredColor}, ${parseFloat(color.a / 255).toFixed(2)})`;
-    };
 
-    return assetsColors[desiredColor] || desiredColor;
+    // first check color is fill or simple color object
+    // https://adobexdplatform.com/plugin-docs/reference/LinearGradientFill.html
+    if (color.colorStops) {
+        let gradientArray = [];
+
+        color.colorStops.forEach(color2 => {
+            const tempColor = color2.color;
+            let desiredColor = tempColor.toHex(false); // false - means get 3 chars if possible
+            if (tempColor.a < 255) {
+                desiredColor = `rgba(${ desiredColor }, ${ parseFloat(tempColor.a / 255).toFixed(2) })`;
+            };
+
+            const result = (assetsColors[desiredColor] || desiredColor) + ' ' + color2.stop * 100 + '%';
+
+            gradientArray.push(result);
+        });
+
+        return `linear-gradient(90deg, ${ gradientArray.join(', ') })`;
+    } else {
+        let desiredColor = color.toHex(false); // false - means get 3 chars if possible
+        if (color.a < 255) {
+            desiredColor = `rgba(${ desiredColor }, ${ parseFloat(color.a / 255).toFixed(2) })`;
+        };
+    
+        return assetsColors[desiredColor] || desiredColor;
+    }
 };
 
 exports.getColorName = getColorName;
@@ -24535,8 +24628,8 @@ const createElement = (tag, attributes) => {
 
             if (name === 'styles') {
                 // Object.assign(element.style, value); // dont need add inline-styles
-            } else if (name === 'html') {
-                element.innerHTML = value;
+            } else if (name === 'html' && value && value.length > 0) {
+                element.insertAdjacentHTML('beforeend', value);
             } else {
                 element.setAttribute(name, value);
             }
@@ -24566,6 +24659,12 @@ const formatHTML = (node, level, tabSize) => {
 
     for (let i = 0; i < node.children.length; i++) {
         textNode = document.createTextNode('\n' + indentBefore);
+
+        // force delete style attribute
+        if (node.children[i].getAttribute('style')) {
+            node.children[i].removeAttribute('style');
+        }
+
         node.insertBefore(textNode, node.children[i]);
 
         formatHTML(node.children[i], level, tabSize);
@@ -24584,6 +24683,7 @@ const generateVue = (component, options) => {
 
     // parsing the component to get html and scss
     return parseLayers(component, [], name, options).then(domArray => {
+        
         // generate styles
         const scss = generateSCSS(domArray, 1, options.tabSize).join('\n\n');
 
@@ -24698,7 +24798,7 @@ const parseLayers = (xdNode, domArray, componentName, options) => {
                     nodeObject.attributes.html = html;
                 });
             } else {
-                promise = parseLayers(xdNode, nodeObject.childrens, componentName).then(domArray2 => {
+                promise = parseLayers(xdNode, nodeObject.childrens, componentName, options).then(domArray2 => {
                     nodeObject.childrens = domArray2;
                 });
             }
@@ -31595,23 +31695,23 @@ exports.fn = function(item, params) {
         var elemSeparator = typeof params.elemSeparator == 'string' ? params.elemSeparator : DEFAULT_SEPARATOR;
         var preserveCurrentColor = typeof params.preserveCurrentColor == 'boolean' ? params.preserveCurrentColor : false;
 
-            // prepare patterns
+        // prepare patterns
         var patterns = params.attrs.map(function(pattern) {
 
-                // if no element separators (:), assume it's attribute name, and apply to all elements *regardless of value*
+            // if no element separators (:), assume it's attribute name, and apply to all elements *regardless of value*
             if (pattern.indexOf(elemSeparator) === -1) {
                 pattern = ['.*', elemSeparator, pattern, elemSeparator, '.*'].join('');
 
-                // if only 1 separator, assume it's element and attribute name, and apply regardless of attribute value
+            // if only 1 separator, assume it's element and attribute name, and apply regardless of attribute value
             } else if (pattern.split(elemSeparator).length < 3) {
                 pattern = [pattern, elemSeparator, '.*'].join('');
             }
 
-                // create regexps for element, attribute name, and attribute value
+            // create regexps for element, attribute name, and attribute value
             return pattern.split(elemSeparator)
                 .map(function(value) {
 
-                        // adjust single * to match anything
+                    // adjust single * to match anything
                     if (value === '*') { value = '.*'; }
 
                     return new RegExp(['^', value, '$'].join(''), 'i');
@@ -31619,13 +31719,13 @@ exports.fn = function(item, params) {
 
         });
 
-            // loop patterns
+        // loop patterns
         patterns.forEach(function(pattern) {
 
-                // matches element
+            // matches element
             if (pattern[0].test(item.elem)) {
 
-                    // loop attributes
+                // loop attributes
                 item.eachAttr(function(attr) {
                     var name = attr.name;
                     var value = attr.value;
@@ -32688,7 +32788,7 @@ const plugins = [
     },
     {
         removeAttrs: {
-            attrs: '(id|class|style|data-name)' // removeAttrs: {attrs: '(stroke|fill)'},
+            attrs: ['id', 'class', 'style', 'data-name'], // removeAttrs: {attrs: '(stroke|fill)'},
         },
     },
     {
@@ -32880,8 +32980,8 @@ const getDialog = (selection, documentRoot) => {
             }
         });
     } else {
-        // just update UI dialog state and data
-        appVue.$children[0].loadUI();
+        // update UI dialog state and data
+        appVue.$children[0].refreshDialog();
     }
 
     return dialog;

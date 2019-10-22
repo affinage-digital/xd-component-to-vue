@@ -57,7 +57,7 @@ const parseLayers = (xdNode, domArray, componentName, options) => {
                     nodeObject.attributes.html = html;
                 });
             } else {
-                promise = parseLayers(xdNode, nodeObject.childrens, componentName).then(domArray2 => {
+                promise = parseLayers(xdNode, nodeObject.childrens, componentName, options).then(domArray2 => {
                     nodeObject.childrens = domArray2;
                 });
             }

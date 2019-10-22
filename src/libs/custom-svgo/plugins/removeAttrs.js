@@ -91,23 +91,23 @@ exports.fn = function(item, params) {
         var elemSeparator = typeof params.elemSeparator == 'string' ? params.elemSeparator : DEFAULT_SEPARATOR;
         var preserveCurrentColor = typeof params.preserveCurrentColor == 'boolean' ? params.preserveCurrentColor : false;
 
-            // prepare patterns
+        // prepare patterns
         var patterns = params.attrs.map(function(pattern) {
 
-                // if no element separators (:), assume it's attribute name, and apply to all elements *regardless of value*
+            // if no element separators (:), assume it's attribute name, and apply to all elements *regardless of value*
             if (pattern.indexOf(elemSeparator) === -1) {
                 pattern = ['.*', elemSeparator, pattern, elemSeparator, '.*'].join('');
 
-                // if only 1 separator, assume it's element and attribute name, and apply regardless of attribute value
+            // if only 1 separator, assume it's element and attribute name, and apply regardless of attribute value
             } else if (pattern.split(elemSeparator).length < 3) {
                 pattern = [pattern, elemSeparator, '.*'].join('');
             }
 
-                // create regexps for element, attribute name, and attribute value
+            // create regexps for element, attribute name, and attribute value
             return pattern.split(elemSeparator)
                 .map(function(value) {
 
-                        // adjust single * to match anything
+                    // adjust single * to match anything
                     if (value === '*') { value = '.*'; }
 
                     return new RegExp(['^', value, '$'].join(''), 'i');
@@ -115,13 +115,13 @@ exports.fn = function(item, params) {
 
         });
 
-            // loop patterns
+        // loop patterns
         patterns.forEach(function(pattern) {
 
-                // matches element
+            // matches element
             if (pattern[0].test(item.elem)) {
 
-                    // loop attributes
+                // loop attributes
                 item.eachAttr(function(attr) {
                     var name = attr.name;
                     var value = attr.value;
