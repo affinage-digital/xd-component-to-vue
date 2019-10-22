@@ -24628,8 +24628,10 @@ const createElement = (tag, attributes) => {
 
             if (name === 'styles') {
                 // Object.assign(element.style, value); // dont need add inline-styles
-            } else if (name === 'html' && value && value.length > 0) {
-                element.insertAdjacentHTML('beforeend', value);
+            } else if (name === 'html') {
+                if (value && value.length > 0) {
+                    element.insertAdjacentHTML('beforeend', value);
+                }
             } else {
                 element.setAttribute(name, value);
             }
